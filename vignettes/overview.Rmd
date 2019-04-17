@@ -26,11 +26,18 @@ library(rgdal)
 library(sf)
 library(gstat)
 
-### How to read data in package
-# sa <- system.file("Data/SocDem/boston_group.shp", 
+### How to read data in package???
+# sa <- system.file("Data/SocDem/boston_group.shp",
 #                   package = "BostonBikeSharingSystem") %>% st_read()
 # 
-# sa <- system.file("Data/SocDem/", package = "BostonBikeSharingSystem") %>% 
+# nc = st_read(system.file("Data/SocDem/boston_group.shp",
+#                   package = "BostonBikeSharingSystem"))
+# 
+# 
+# districts <- system.file("extdata/districts.shp", package = "geospaar") %>% 
+#   st_read()
+# 
+# sa <- system.file("Data/SocDem/", package = "BostonBikeSharingSystem") %>%
 #   dir(pattern = "boston_group.shp",
 #       full.names = TRUE) %>% st_read()
 
@@ -44,10 +51,25 @@ bstation <- dir(bikePath, pattern = "Hubway_Stations_as_of_July_2017.csv",
   st_as_sf(., coords = c("Longitude", "Latitude"), crs = 4326) %>% 
   st_transform(x = ., crs = st_crs(sa))
 
-par(mar = rep(0, 4))
-sa %>% st_geometry() %>% plot()
-bstation %>% st_geometry() %>% plot(add = TRUE)
-bstation %>% st_geometry() %>% plot()
+par(mar = c(0, 0, 1, 0))
+sa %>% st_union() %>% st_geometry() %>% 
+  plot(main = "Blue Bike Stations in Boston City",
+       col = "cornsilk")
+bstation %>% st_geometry() %>% 
+  plot(pch = 20, col = "steelblue1", add = TRUE)
+legend(x = "bottomright",
+       legend = "Blue Bike Stations",
+       pch = 20, col = "steelblue1", bty = "n")
 
+# census <- dir(dataPath, pattern = ".csv", full.names = TRUE) %>% 
+#   map(function(x) {
+#     read_csv(x)
+#   })
+# names <- dir(dataPath, pattern = ".csv", full.names = TRUE) %>% basename() %>% 
+#   strsplit(., "[.]") %>% unlist %>% delete("csv")
+# names[1](1)
+# l <- strsplit(names[1], "[.]")
+# l[1,1]
+# unlist(l)[1]
 ```
 
