@@ -15,3 +15,39 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+
+```{r, waring=FALSE, message=FALSE, fig.width=6, fig.height=4, fig.align = "center"}
+library(BostonBikeSharingSystem)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(ggplot2)
+library(rgdal)
+library(sf)
+library(gstat)
+
+### How to read data in package
+# sa <- system.file("Data/SocDem/boston_group.shp", 
+#                   package = "BostonBikeSharingSystem") %>% st_read()
+# 
+# sa <- system.file("Data/SocDem/", package = "BostonBikeSharingSystem") %>% 
+#   dir(pattern = "boston_group.shp",
+#       full.names = TRUE) %>% st_read()
+
+dataPath <- "D:/R_final/BikeSharing_project/BostonBikeSharingSystem/Data/SocDem"
+bikePath <- "D:/R_final/BikeSharing_project/BostonBikeSharingSystem/Data/BlueBike"
+
+sa <- dir(dataPath, pattern = "boston_group.shp", full.names = TRUE) %>%
+  st_read() %>% select(COUNTYFP10, GEOID10)
+bstation <- dir(bikePath, pattern = "Hubway_Stations_as_of_July_2017.csv", 
+                full.names = TRUE) %>% read_csv() %>% 
+  st_as_sf(., coords = c("Longitude", "Latitude"), crs = 4326) %>% 
+  st_transform(x = ., crs = st_crs(sa))
+
+par(mar = rep(0, 4))
+sa %>% st_geometry() %>% plot()
+bstation %>% st_geometry() %>% plot(add = TRUE)
+bstation %>% st_geometry() %>% plot()
+
+```
+
