@@ -1,10 +1,10 @@
 ---
-title: "Overview"
+title: "Boston Bike Sharing System Analysis"
 author: "Mengyi Zhang and Piaotian Jin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Module 3}
+  %\VignetteIndexEntry{Boston Bike Sharing System Analysis}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -12,64 +12,27 @@ vignette: >
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
+  fig.align = "center",
   comment = "#>"
 )
+library(knitr)
+options(width = 100)
 ```
 
-```{r, waring=FALSE, message=FALSE, fig.width=6, fig.height=4, fig.align = "center"}
-library(BostonBikeSharingSystem)
-library(dplyr)
-library(tidyr)
-library(tidyverse)
-library(ggplot2)
-library(rgdal)
-library(sf)
-library(gstat)
+## 1 Summary
 
-### How to read data in package???
-# sa <- system.file("Data/SocDem/boston_group.shp",
-#                   package = "BostonBikeSharingSystem") %>% st_read()
-# 
-# nc = st_read(system.file("Data/SocDem/boston_group.shp",
-#                   package = "BostonBikeSharingSystem"))
-# 
-# 
-# districts <- system.file("extdata/districts.shp", package = "geospaar") %>% 
-#   st_read()
-# 
-# sa <- system.file("Data/SocDem/", package = "BostonBikeSharingSystem") %>%
-#   dir(pattern = "boston_group.shp",
-#       full.names = TRUE) %>% st_read()
+Bike sharing system has received great attention in recent years. As a green way to get around, bike sharing system can relieve the traffic jam in big cities, reduce the emission of harmful gases from motor vehicles, and improve the first mile and last mile connection to other kinds of transits. In 2004, there are about 13 bike sharing systems around the world. But now, there are over 850 bike sharing systems globally.
 
-dataPath <- "D:/R_final/BikeSharing_project/BostonBikeSharingSystem/Data/SocDem"
-bikePath <- "D:/R_final/BikeSharing_project/BostonBikeSharingSystem/Data/BlueBike"
+Boston’s original bike sharing system, Hubway, was launched in 2011, and has changed the name to Bluebikes in 2018. Now, Bluebikes has more than 1,800 bikes and over 200 stations across Boston, Brookline, Cambridge and Somerville.
 
-sa <- dir(dataPath, pattern = "boston_group.shp", full.names = TRUE) %>%
-  st_read() %>% select(COUNTYFP10, GEOID10)
-bstation <- dir(bikePath, pattern = "Hubway_Stations_as_of_July_2017.csv", 
-                full.names = TRUE) %>% read_csv() %>% 
-  st_as_sf(., coords = c("Longitude", "Latitude"), crs = 4326) %>% 
-  st_transform(x = ., crs = st_crs(sa))
+This project aims to explore the usage patterns of Boston’s bike sharing system, Bluebikes, thus help decision makers to manage the bike sharing system more properly, and promote the full use of Bluebikes.
 
-par(mar = c(0, 0, 1, 0))
-sa %>% st_union() %>% st_geometry() %>% 
-  plot(main = "Blue Bike Stations in Boston City",
-       col = "cornsilk")
-bstation %>% st_geometry() %>% 
-  plot(pch = 20, col = "steelblue1", add = TRUE)
-legend(x = "bottomright",
-       legend = "Blue Bike Stations",
-       pch = 20, col = "steelblue1", bty = "n")
+The primary objectives includes:
 
-# census <- dir(dataPath, pattern = ".csv", full.names = TRUE) %>% 
-#   map(function(x) {
-#     read_csv(x)
-#   })
-# names <- dir(dataPath, pattern = ".csv", full.names = TRUE) %>% basename() %>% 
-#   strsplit(., "[.]") %>% unlist %>% delete("csv")
-# names[1](1)
-# l <- strsplit(names[1], "[.]")
-# l[1,1]
-# unlist(l)[1]
-```
+1. Explore the usage of Bluebikes from 2015 to 2018. Find out how the number of use changes among different months. Figure out is there any relationship between the number of use and the weather.
+
+2. Use hot spot analysis to find out which stations are most popular, what kind of destinations are most popular, what kind of originals are most popular, and how they changed from 2015 to 2018.
+
+## 2 Approach and Method
+### 2.1 Data
 
