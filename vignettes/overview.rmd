@@ -1,0 +1,84 @@
+---
+title: "Boston Bike Sharing System Analysis"
+author: "Mengyi Zhang and Piaotian Jin"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Boston Bike Sharing System Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  fig.align = "center",
+  comment = "#>"
+)
+library(knitr)
+options(width = 100)
+```
+
+## 1 Summary
+
+Bike sharing system has received great attention in recent years. As a green way to get around, bike sharing system can relieve the traffic jam in big cities, reduce the emission of harmful gases from motor vehicles, and improve the first mile and last mile connection to other kinds of transits. In 2004, there are about 13 bike sharing systems around the world. But now, there are over 850 bike sharing systems globally.
+
+Boston’s original bike sharing system, Hubway, was launched in 2011, and has changed the name to Bluebikes in 2018. Now, Bluebikes has more than 1,800 bikes and over 200 stations across Boston, Brookline, Cambridge and Somerville.
+
+This project aims to explore the usage patterns of Boston’s bike sharing system, Bluebikes, thus help decision makers to manage the bike sharing system more properly, and promote the full use of Bluebikes.
+
+The primary objectives includes:
+
+1. Explore the usage of Bluebikes from 2015 to 2018. Find out how the number of use and trip durations change among different months. 
+
+2. Use Linear Regression to figure out is there any relationship between the number of use and the weather.
+
+3. Use hot spot analysis to find out which stations are most popular, what kind of destinations are most popular, what kind of originals are most popular, and how they changed from 2015 to 2018.
+
+## 2 Approach and Method
+### 2.1 Data
+
+### 2.2 Code
+
+1. Bluebikes Trips Exploration
+
+Use packages tidyverse, dplyr and tidyr to analysis Bluebikes trips data from 2015 to 2018. Use packages ggplot2 to visualize the data. (Piaotian Jin)
+
+2. Linear Regression
+
+Use R's lm (linear model) function to fit a regression between the number of use and the weather. Find out is there any relationship between the number of use and the weather. (Piaotian Jin)
+
+3. Hot Spot Analysis
+
+Use package hotspots to perform hot analysis on Bluebikes trip data. Find out which stations are most popular, what kind of destinations are most popular, what kind of originals are most popular, and how they changed from 2015 to 2018. (Piaotian Jin)
+
+Combine the Hot Spot Analysis results with census data. (Mengyi Zhang)
+
+4. Poisson Clusters Analysis
+
+
+## 3 Timelines
+April 15 - April 21: Bluebikes Trips Exploration (Piaotian Jin)
+
+April 15 - April 21: Explore Poisson Clusters Analysis (Mengyi Zhang)
+
+April 22 - April 25: Linear Regression (Piaotian Jin)
+
+April 22 - April 25: Poisson Clusters Analysis (Mengyi Zhang)
+
+April 26 - April 28: Hot Spot Analysis (Piaotian Jin)
+
+April 26 - April 28: Combine the Hot Spot Analysis results with census data (Mengyi Zhang)
+
+April 29 - May 5: Write Final Paper (Mengyi Zhang and Piaotian Jin)
+
+## 4 Anticipated Outcomes
+1. Bluebikes Trips Exploration
+
+Plots show how the number of use changes among different months from 2015 to 2018.
+
+Plots show how the trip durations time changes among different months from 2015 to 2018.
+
+2. Linear Regression
+
+Linear Regression results of  
