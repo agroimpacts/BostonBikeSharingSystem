@@ -1,0 +1,64 @@
+---
+title: "Mengyi - overview"
+author: "Mengyi Zhang"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Module 3}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+```{r, waring=FALSE, message=FALSE, fig.width=6, fig.height=4, fig.align = "center"}
+library(BostonBikeSharingSystem)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(ggplot2)
+library(rgdal)
+library(sf)
+library(gstat)
+
+## How to read data in package???
+# sa <- st_read("../Data/SocDem/boston_group.shp")%>% select(COUNTYFP10, GEOID10)
+
+# nc = st_read(system.file("Data/SocDem/boston_group.shp",
+#                   package = "BostonBikeSharingSystem"))
+# 
+# 
+# districts <- system.file("extdata/districts.shp", package = "geospaar") %>% 
+#   st_read()
+# 
+# sa <- system.file("Data/SocDem/", package = "BostonBikeSharingSystem") %>%
+#   dir(pattern = "boston_group.shp",
+#       full.names = TRUE) %>% st_read()
+
+dataPath <- "D:/R_final/BikeSharing_project/BostonBikeSharingSystem/Data/SocDem"
+bikePath <- "D:/R_final/BikeSharing_project/BlueBike"
+# 
+sa <- dir(dataPath, pattern = "boston_group.shp", full.names = TRUE) %>%
+  st_read() %>% select(COUNTYFP10, GEOID10)
+bstation <- dir(bikePath, pattern = "Hubway_Stations_as_of_July_2017.csv", 
+                full.names = TRUE) %>% read_csv() %>% 
+  st_as_sf(., coords = c("Longitude", "Latitude"), crs = 4326) %>% 
+  st_transform(x = ., crs = st_crs(sa))
+
+census <- dir("../Data/SocDem/", pattern = ".csv", full.names = TRUE) %>% 
+   map(function(x) {
+     read_csv(x)
+   })
+# names <- dir(dataPath, pattern = ".csv", full.names = TRUE) %>% basename() %>% 
+#   strsplit(., "[.]") %>% unlist %>% delete("csv")
+# names[1](1)
+# l <- strsplit(names[1], "[.]")
+# l[1,1]
+# unlist(l)[1]
+```
