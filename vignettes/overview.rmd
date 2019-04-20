@@ -81,4 +81,8 @@ Plots show how the trip durations time changes among different months from 2015 
 
 2. Linear Regression
 
-Linear Regression results of  
+Linear Regression results of the number of use and the weather.
+
+3. Hot Spot Analysis
+
+Hot Spot Maps of stations from 2015 to 2018.
