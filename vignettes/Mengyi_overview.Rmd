@@ -43,6 +43,7 @@ library(gstat)
 
 dataPath <- "D:/R_final/BikeSharing_project/BostonBikeSharingSystem/Data/SocDem"
 bikePath <- "D:/R_final/BikeSharing_project/BlueBike"
+censusPath <- dir("../Data/SocDem/", pattern = ".csv", full.names = TRUE)
 # 
 sa <- dir(dataPath, pattern = "boston_group.shp", full.names = TRUE) %>%
   st_read() %>% select(COUNTYFP10, GEOID10)
@@ -50,15 +51,15 @@ bstation <- dir(bikePath, pattern = "Hubway_Stations_as_of_July_2017.csv",
                 full.names = TRUE) %>% read_csv() %>% 
   st_as_sf(., coords = c("Longitude", "Latitude"), crs = 4326) %>% 
   st_transform(x = ., crs = st_crs(sa))
+sa$GEOID10 <- as.numeric(sa$GEOID10)
 
-census <- dir("../Data/SocDem/", pattern = ".csv", full.names = TRUE) %>% 
+names <- censusPath %>% basename() %>% strsplit(., "[.]") %>% unlist
+census <- censusPath %>% 
    map(function(x) {
-     read_csv(x)
-   })
-# names <- dir(dataPath, pattern = ".csv", full.names = TRUE) %>% basename() %>% 
-#   strsplit(., "[.]") %>% unlist %>% delete("csv")
-# names[1](1)
-# l <- strsplit(names[1], "[.]")
-# l[1,1]
-# unlist(l)[1]
+     read_csv(x) %>% rename(GEOID10 = Id2)
+   }) %>% set_names(names[!names %in% "csv"])
+census$housingunit$GEOID10 <- census$housingunit$GEOID10 %>% as.factor()
+
+t <- left_join(x = sa, y = census$housingunit, by = "GEOID10")
+t$Total
 ```
