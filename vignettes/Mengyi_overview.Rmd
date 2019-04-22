@@ -27,24 +27,12 @@ library(rgdal)
 library(sf)
 library(gstat)
 
-## How to read data in package???
-# sa <- st_read("../Data/SocDem/boston_group.shp")%>% select(COUNTYFP10, GEOID10)
-
-# nc = st_read(system.file("Data/SocDem/boston_group.shp",
-#                   package = "BostonBikeSharingSystem"))
-# 
-# 
-# districts <- system.file("extdata/districts.shp", package = "geospaar") %>% 
-#   st_read()
-# 
-# sa <- system.file("Data/SocDem/", package = "BostonBikeSharingSystem") %>%
-#   dir(pattern = "boston_group.shp",
-#       full.names = TRUE) %>% st_read()
-
+# Data path
 dataPath <- "D:/R_final/BikeSharing_project/BostonBikeSharingSystem/Data/SocDem"
 bikePath <- "D:/R_final/BikeSharing_project/BlueBike"
 censusPath <- dir("../Data/SocDem/", pattern = ".csv", full.names = TRUE)
-# 
+
+# Read in shapefiles and station loction data
 sa <- dir(dataPath, pattern = "boston_group.shp", full.names = TRUE) %>%
   st_read() %>% select(COUNTYFP10, GEOID10)
 subway <- dir(dataPath, pattern = "subway.shp", full.names = TRUE) %>%
@@ -58,16 +46,18 @@ bstation <- dir(bikePath, pattern = "Hubway_Stations_as_of_July_2017.csv",
   st_as_sf(., coords = c("Longitude", "Latitude"), crs = 4326) %>% 
   st_transform(x = ., crs = st_crs(sa))
 
-
+# Read in census data and set the name for each dataset
 names <- censusPath %>% basename() %>% strsplit(., "[.]") %>% unlist
 census <- censusPath %>% 
    map(function(x) {
      read_csv(x) %>% rename(GEOID10 = Id2) 
    }) %>% set_names(names[!names %in% "csv"])
 
+# Set value 0 to NA
 is.na(census$housingunit) <- !census$housingunit
 is.na(census$medhincome) <- !census$medhincome
 
+# Add fields for visualization
 popdata <- census$poprace %>% select(-GEOID10, -Total)
 census$poprace <- census$poprace %>%
   mutate(majority = colnames(popdata)[max.col(popdata, ties.method = "first")])
@@ -75,23 +65,18 @@ census$poprace <- census$poprace %>%
 census$worktransmeans <- census$worktransmeans %>% 
   mutate(pbike = Bicycle / Total)
 
-
-# census$medhincome %>% arrange(Income)
-# census$housingunit %>% arrange(Total)
-# census$poprace %>% arrange(majority)
-# census$poprace %>% arrange(Total)
-# census$worktransmeans%>% arrange(Total)
-# census$worktravelmins %>% arrange(majority)
-
+# Change the class of GEOID10 in census dataset for join
 census <- sapply(census, function(x) {
   x$GEOID10 <- x$GEOID10 %>% as.factor()
   return(x)
 })
 
+# Join census dataset to study area shapefile
 censusshp <- sapply(census, function(x) {
   left_join(sa, x, by = "GEOID10")
 })
 
+# Visualize the data and save plots as png files
 ggplot(sa %>% st_union()) +
   geom_sf(aes(fill = "Study Area")) +
   geom_sf(data = bus, aes(colour = "Bus Routes"), show.legend = "line") +
@@ -174,5 +159,4 @@ ggplot(censusshp$worktransmeans) +
        subtitle = "Boston Area, Level: Census Block Group")
 ggsave("workmeans.png", path = "../vignettes/fig", dpi = 120,
        width = 6, height = 4, units = "in")
-
 ```
