@@ -45,13 +45,12 @@ The primary objectives includes:
 
 Bluebikes publishes the trip data in csv format each quarter, providing the following information: trip duration, trip start and stop time and date, the id, name and GPS coordinates of start/end station, bike id, and user profile including id, type, gender and birth year. Analyses will be performed on the data from January 2015 to December 2018 in order to generate a comprehensive understanding of the sharing system. Figures below are histograms of Bluebikes trip data from 2015 to 2018.
 
-```{r, waring=FALSE, message=FALSE, ,fig.show='hold',fig.align='center'}
-include_graphics("../vignettes/fig/bike2015.jpeg")
-include_graphics("../vignettes/fig/bike2016.jpeg")
-include_graphics("../vignettes/fig/bike2017.jpeg")
-include_graphics("../vignettes/fig/bike2018.jpeg")
-```
 
+![](../vignettes/fig/bike2015.jpeg){width=45%} 
+![](../vignettes/fig/bike2016.jpeg){width=45%}
+
+![](../vignettes/fig/bike2017.jpeg){width=45%} 
+![](../vignettes/fig/bike2018.jpeg){width=45%}
 
 
 The code processing trip data is attached below. - PJ
