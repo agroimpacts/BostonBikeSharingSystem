@@ -1,8 +1,8 @@
 Package: BostonBikeSharingSystem
-Title: What the Package Does (one line, title case)
+Title: Boston Bike Sharing System Analysis
 Version: 0.0.1
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Authors@R: Mengyi Zhang and Piaotian Jin
+Description: Boston Bike Sharing System Analysis
 Depends: R (>= 3.5.1)
 License: What license is it under?
 Encoding: UTF-8
