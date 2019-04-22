@@ -308,7 +308,7 @@ ggsave("workmeans.png", path = "../vignettes/fig", dpi = 120,
 
 1. Bluebikess Trips Exploration
 
-Clean up and summarize Bluebikess dataset for further analyses. Use packages tidyverse, dplyr and tidyr to analysis Bluebikess trips data from 2015 to 2018. Use packages ggplot2 to visualize the data. (Piaotian Jin and Mengyi Zhang)
+Clean up and summarize Bluebikess dataset for further analyses. Use packages `tidyverse`, `dplyr` and `tidyr` to analysis Bluebikess trips data from 2015 to 2018. Use packages `ggplot2` to visualize the data. (Piaotian Jin and Mengyi Zhang)
 
 2. Linear Regression
 
@@ -316,13 +316,13 @@ Use R's lm (linear model) function to fit a regression between the number of use
 
 3. Hot Spot Analysis
 
-Use package hotspots to perform hot analysis on Bluebikess trip data. Find out which stations are most popular, what kind of destinations are most popular, what kind of originals are most popular, and how they changed from 2015 to 2018. (Piaotian Jin)
+Use package `spdep` and `hotspots` to perform hot analysis on Bluebikess trip data. Find out which stations are most popular, what kind of destinations are most popular, what kind of originals are most popular, and how they changed from 2015 to 2018. (Piaotian Jin)
    
 Analyze the demographic characteristics in areas of hot/cold spot clusters. (Mengyi Zhang)
 
 4. Poisson Clusters Analysis
 
-Use package mixtool to conduct Poisson regressions and get the EM algorithm output. Identify station clusters and summarize their profile based on the feature of neighboring communities and demographics. (Mengyi Zhang)
+Use package `mixtool` to conduct Poisson regressions and get the EM algorithm output. Identify station clusters and summarize their profile based on the feature of neighboring communities and demographics. (Mengyi Zhang)
 
 ## 3 Timelines - PJ
 April 15 - April 21: Bluebikess Trips Exploration (Piaotian Jin)
