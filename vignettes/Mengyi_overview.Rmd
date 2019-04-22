@@ -51,15 +51,80 @@ bstation <- dir(bikePath, pattern = "Hubway_Stations_as_of_July_2017.csv",
                 full.names = TRUE) %>% read_csv() %>% 
   st_as_sf(., coords = c("Longitude", "Latitude"), crs = 4326) %>% 
   st_transform(x = ., crs = st_crs(sa))
-sa$GEOID10 <- as.numeric(sa$GEOID10)
+
 
 names <- censusPath %>% basename() %>% strsplit(., "[.]") %>% unlist
 census <- censusPath %>% 
    map(function(x) {
-     read_csv(x) %>% rename(GEOID10 = Id2)
+     read_csv(x) %>% rename(GEOID10 = Id2) 
    }) %>% set_names(names[!names %in% "csv"])
-census$housingunit$GEOID10 <- census$housingunit$GEOID10 %>% as.factor()
 
-t <- left_join(x = sa, y = census$housingunit, by = "GEOID10")
-t$Total
+is.na(census$housingunit) <- !census$housingunit
+is.na(census$medhincome) <- !census$medhincome
+
+popdata <- census$poprace %>% select(-GEOID10, -Total)
+census$poprace <- census$poprace %>%
+  mutate(majority = colnames(popdata)[max.col(popdata, ties.method = "first")])
+
+census$worktransmeans <- census$worktransmeans %>% 
+  mutate(pbike = Bicycle / Total)
+
+
+# census$medhincome %>% arrange(Income)
+# census$housingunit %>% arrange(Total)
+# census$poprace %>% arrange(majority)
+# census$poprace %>% arrange(Total)
+# census$worktransmeans%>% arrange(Total)
+# census$worktravelmins %>% arrange(majority)
+
+census <- sapply(census, function(x) {
+  x$GEOID10 <- x$GEOID10 %>% as.factor()
+  return(x)
+})
+
+censusshp <- sapply(census, function(x) {
+  left_join(sa, x, by = "GEOID10")
+})
+
+ggplot(censusshp$housingunit) + 
+  geom_sf(aes(fill = Total)) +
+  scale_fill_gradientn(colors = terrain.colors(7)) +
+  labs(title = "Number of Housing Units",
+       subtitle = "Boston Area, Level: Census Block Group")
+ggsave("housingunits.png", path = "../vignettes/fig")
+
+ggplot(censusshp$medhincome) + 
+  geom_sf(aes(fill = Income)) +
+  scale_fill_gradientn(colors = terrain.colors(10)) +
+  labs(title = "Median Household Income",
+       subtitle = "Boston Area, Level: Census Block Group")
+ggsave("medianincome.png", path = "../vignettes/fig")
+
+npop <- censusshp$poprace[censusshp$poprace$Total == 0, ]
+ggplot(censusshp$poprace) + 
+  geom_sf(aes(fill = Total)) +
+  scale_fill_gradientn(colors = terrain.colors(10)) +
+  geom_sf(data = npop, fill = "grey28") +
+  labs(title = "Total Number of Population",
+       subtitle = "Boston Area, Level: Census Block Group")
+ggsave("poptotal.png", path = "../vignettes/fig")
+
+rcols = c("lightblue", "khaki", "lightsalmon", "palegreen", "pink")
+ggplot(censusshp$poprace) + 
+  geom_sf(aes(fill = majority)) +
+  scale_fill_manual(values = rcols) +
+  geom_sf(data = npop, fill = "grey28") +
+  labs(title = "Majority Race of Population",
+       subtitle = "Boston Area, Level: Census Block Group")
+ggsave("poprace.png", path = "../vignettes/fig")
+
+nworkmeans <- censusshp$worktransmeans[censusshp$worktransmeans$Total == 0, ]
+ggplot(censusshp$worktransmeans) + 
+  geom_sf(aes(fill = pbike)) +
+  scale_fill_gradientn(colors = terrain.colors(10)) +
+  geom_sf(data = nworkmeans, fill = "grey28") +
+  labs(title = "Percentage of Workers Riding the Bike to Work",
+       subtitle = "Boston Area, Level: Census Block Group")
+ggsave("workmeans.png", path = "../vignettes/fig")
+
 ```
