@@ -19,7 +19,7 @@ library(knitr)
 options(width = 100)
 ```
 
-## 1 Summary - PJin
+## 1 Summary - PJ
 
 Bike sharing system has received great attention in recent years. As a green way to get around, bike sharing system can relieve the traffic jam in big cities, reduce the emission of harmful gases from motor vehicles, and improve the first mile and last mile connection to other kinds of transits. In 2004, there are about 13 bike sharing systems around the world. But now, there are over 850 bike sharing systems globally.
 
@@ -40,8 +40,8 @@ The primary objectives includes:
 5. Summarize the usage profile of Bluebikess system and explore if there are any potential areas to promote new bike stations.
 
 
-## 2 Approach and Method - MZhang
-### 2.1 Data
+## 2 Approach and Method
+### 2.1 Data - MZ
 
 Bluebikes publishes the trip data in csv format each quarter, providing the following information: trip duration, trip start and stop time and date, the id, name and GPS coordinates of start/end station, bike id, and user profile including id, type, gender and birth year. Analyses will be performed on the data from January 2015 to December 2018 in order to generate a comprehensive understanding of the sharing system. Figures below are histograms of Bluebikes trip data from 2015 to 2018.
 
@@ -53,9 +53,73 @@ include_graphics("../vignettes/fig/bike2018.jpeg")
 ```
 
 
-The code processing trip data is attached below.
+
+The code processing trip data is attached below. - PJ
 ```{r, eval = FALSE}
-# Put trip data processing code here
+#Read and format bike trip data in 2015
+fileName2015 <- list.files(path = "D:/Class/R/FinalProject/Data/2015",
+                           full.names = TRUE)
+bike2015 <- lapply(fileName2015, read_csv)
+bike2015All <- do.call(rbind, bike2015)
+bikeByMonth2015 <- bike2015All %>% group_by(month) %>% 
+  summarize(records = n(), mean_duration = mean(tripduration),
+            median_duration = median(tripduration), year = mean(year))
+
+#Read and format bike trip data in 2016
+fileName2016 <- list.files(path = "D:/Class/R/FinalProject/Data/2016",
+                           full.names = TRUE)
+bike2016 <- lapply(fileName2016, read_csv)
+bike2016All <- do.call(rbind, bike2016)
+bikeByMonth2016 <- bike2016All %>% group_by(month) %>% 
+  summarize(records = n(), mean_duration = mean(tripduration),
+            median_duration = median(tripduration), year = mean(year))
+
+#Read and format bike trip data in 2017
+fileName2017 <- list.files(path = "D:/Class/R/FinalProject/Data/2017",
+                           full.names = TRUE)
+bike2017 <- lapply(fileName2017, read_csv)
+bike2017All <- do.call(rbind, bike2017)
+bikeByMonth2017 <- bike2017All %>% group_by(month) %>% 
+  summarize(records = n(), mean_duration = mean(tripduration), 
+            median_duration = median(tripduration), year = mean(year))
+
+#Read and format bike trip data in 2018
+fileName2018 <- list.files(path = "D:/Class/R/FinalProject/Data/2018",
+                           full.names = TRUE)
+bike2018 <- lapply(fileName2018, read_csv)
+bike2018All <- do.call(rbind, bike2018)
+bikeByMonth2018 <- bike2018All %>% group_by(month) %>% 
+  summarize(records = n(), mean_duration = mean(tripduration),
+            median_duration = median(tripduration), year = mean(year))
+
+# Plot the number of use per month from 2015 - 2018
+bikeByMonth2015 %>% ggplot(., aes(x = month, y = records)) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks=c(1:12)) +
+  ylab("The number of trips") +
+  xlab("Month") +
+  ggtitle("The number of trips by month in 2015")
+
+bikeByMonth2016 %>% ggplot(., aes(x = month, y = records)) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks=c(1:12)) +
+  ylab("The number of trips") +
+  xlab("Month") +
+  ggtitle("The number of trips by month in 2016")
+
+bikeByMonth2017 %>% ggplot(., aes(x = month, y = records)) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks=c(1:12)) +
+  ylab("The number of trips") +
+  xlab("Month") +
+  ggtitle("The number of trips by month in 2017")
+
+bikeByMonth2018 %>% ggplot(., aes(x = month, y = records)) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks=c(1:12)) +
+  ylab("The number of trips") +
+  xlab("Month") +
+  ggtitle("The number of trips by month in 2018")
 ```
 
 
@@ -91,7 +155,7 @@ include_graphics("../vignettes/fig/colleges.png")
 ```
 
 
-The code processing station and census data is attached below.
+The code processing station and census data is attached below. - MZ
 
 ```{r, eval = FALSE}
 library(BostonBikeSharingSystem)
@@ -238,7 +302,7 @@ ggsave("workmeans.png", path = "../vignettes/fig", dpi = 120,
 ```
 
 
-### 2.2 Code
+### 2.2 Code - MZ and PJ
 
 1. Bluebikess Trips Exploration
 
@@ -258,7 +322,7 @@ Analyze the demographic characteristics in areas of hot/cold spot clusters. (Men
 
 Use package mixtool to conduct Poisson regressions and get the EM algorithm output. Identify station clusters and summarize their profile based on the feature of neighboring communities and demographics. (Mengyi Zhang)
 
-## 3 Timelines - PJjin
+## 3 Timelines - PJ
 April 15 - April 21: Bluebikess Trips Exploration (Piaotian Jin)
 
 April 15 - April 21: Explore Poisson Clusters Analysis (Mengyi Zhang)
@@ -273,7 +337,7 @@ April 26 - April 28: Combine the Hot Spot Analysis results with census data (Men
 
 April 29 - May 5: Write Final Paper (Mengyi Zhang and Piaotian Jin)
 
-## 4 Anticipated Outcomes - MZhang
+## 4 Anticipated Outcomes - MZ and PJ
 1. Bluebikess Trips Exploration
 
 Plots show how the number of use changes among different months from 2015 to 2018.
@@ -290,4 +354,4 @@ Hot Spot Maps of stations from 2015 to 2018.
 
 4. Poisson Cluster Analysis
 
-Maps of station clusters and corresponding 
+Maps of station clusters and corresponding meaning.
