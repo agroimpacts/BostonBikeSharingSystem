@@ -110,7 +110,7 @@ ggplot(sa %>% st_union()) +
                                                  shape = c(20, NA, NA)))) +
     labs(title = "Bluebikes Stations in Boston Area") +
   theme_minimal()
-ggsave("bikestations.png", path = "../vignettes/fig",
+ggsave("bikestations.png", path = "../vignettes/fig", dpi = 120,
        width = 6, height = 4, units = "in")
 
 ggplot(sa %>% st_union()) +
@@ -126,7 +126,7 @@ ggplot(sa %>% st_union()) +
                                                  shape = 18))) +
     labs(title = "Colleges and Universities in Boston Area") +
   theme_minimal()
-ggsave("colleges.png", path = "../vignettes/fig",
+ggsave("colleges.png", path = "../vignettes/fig", dpi = 120,
        width = 6, height = 4, units = "in")
 
 ggplot(censusshp$housingunit) + 
@@ -134,7 +134,7 @@ ggplot(censusshp$housingunit) +
   scale_fill_gradientn(colors = terrain.colors(7)) +
   labs(title = "Number of Housing Units",
        subtitle = "Boston Area, Level: Census Block Group")
-ggsave("housingunits.png", path = "../vignettes/fig",
+ggsave("housingunits.png", path = "../vignettes/fig", dpi = 120,
        width = 6, height = 4, units = "in")
 
 ggplot(censusshp$medhincome) + 
@@ -142,7 +142,7 @@ ggplot(censusshp$medhincome) +
   scale_fill_gradientn(colors = terrain.colors(10)) +
   labs(title = "Median Household Income",
        subtitle = "Boston Area, Level: Census Block Group")
-ggsave("medianincome.png", path = "../vignettes/fig",
+ggsave("medianincome.png", path = "../vignettes/fig", dpi = 120,
        width = 6, height = 4, units = "in")
 
 npop <- censusshp$poprace[censusshp$poprace$Total == 0, ]
@@ -152,7 +152,7 @@ ggplot(censusshp$poprace) +
   geom_sf(data = npop, fill = "grey28") +
   labs(title = "Total Number of Population",
        subtitle = "Boston Area, Level: Census Block Group")
-ggsave("poptotal.png", path = "../vignettes/fig",
+ggsave("poptotal.png", path = "../vignettes/fig", dpi = 120,
        width = 6, height = 4, units = "in")
 
 rcols = c("lightblue", "khaki", "lightsalmon", "palegreen", "pink")
@@ -162,7 +162,7 @@ ggplot(censusshp$poprace) +
   geom_sf(data = npop, fill = "grey28") +
   labs(title = "Majority Race of Population",
        subtitle = "Boston Area, Level: Census Block Group")
-ggsave("poprace.png", path = "../vignettes/fig",
+ggsave("poprace.png", path = "../vignettes/fig", dpi = 120,
        width = 6, height = 4, units = "in")
 
 nworkmeans <- censusshp$worktransmeans[censusshp$worktransmeans$Total == 0, ]
@@ -172,7 +172,7 @@ ggplot(censusshp$worktransmeans) +
   geom_sf(data = nworkmeans, fill = "grey28") +
   labs(title = "Percentage of Workers Riding the Bike to Work",
        subtitle = "Boston Area, Level: Census Block Group")
-ggsave("workmeans.png", path = "../vignettes/fig",
+ggsave("workmeans.png", path = "../vignettes/fig", dpi = 120,
        width = 6, height = 4, units = "in")
 
 ```
