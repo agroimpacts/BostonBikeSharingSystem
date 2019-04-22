@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 ```
 
 
-```{r, waring=FALSE, message=FALSE, fig.width=6, fig.height=4, fig.align = "center"}
+```{r, waring=FALSE, message=FALSE, fig.align = "center"}
 library(BostonBikeSharingSystem)
 library(dplyr)
 library(tidyr)
@@ -26,6 +26,8 @@ library(ggplot2)
 library(rgdal)
 library(sf)
 library(gstat)
+library(gridExtra)
+library(RColorBrewer)
 
 # Data path
 dataPath <- "D:/R_final/BikeSharing_project/BostonBikeSharingSystem/Data/SocDem"
@@ -60,10 +62,10 @@ is.na(census$medhincome) <- !census$medhincome
 # Add fields for visualization
 popdata <- census$poprace %>% select(-GEOID10, -Total)
 census$poprace <- census$poprace %>%
-  mutate(majority = colnames(popdata)[max.col(popdata, ties.method = "first")])
+  mutate(Majority = colnames(popdata)[max.col(popdata, ties.method = "first")])
 
 census$worktransmeans <- census$worktransmeans %>% 
-  mutate(pbike = Bicycle / Total)
+  mutate(Percentage = Bicycle / Total)
 
 # Change the class of GEOID10 in census dataset for join
 census <- sapply(census, function(x) {
@@ -93,10 +95,12 @@ ggplot(sa %>% st_union()) +
                                             list(linetype = 
                                                    c("blank", "solid", "solid"),
                                                  shape = c(20, NA, NA)))) +
-    labs(title = "Bluebikes Stations in Boston Area") +
-  theme_minimal()
+  labs(title = "Bluebikes Stations in Boston Area") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("bikestations.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 6, height = 6, units = "in")
 
 ggplot(sa %>% st_union()) +
   geom_sf(aes(fill = "Study Area")) +
@@ -109,54 +113,70 @@ ggplot(sa %>% st_union()) +
                      guide = guide_legend(override.aes = 
                                             list(linetype = "blank",
                                                  shape = 18))) +
-    labs(title = "Colleges and Universities in Boston Area") +
-  theme_minimal()
+  labs(title = "Colleges and Universities in Boston Area") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("colleges.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 6, height = 6, units = "in")
 
 ggplot(censusshp$housingunit) + 
   geom_sf(aes(fill = Total)) +
-  scale_fill_gradientn(colors = terrain.colors(7)) +
+  scale_fill_gradientn(colors = brewer.pal(n = 8, name = "Oranges")) +
   labs(title = "Number of Housing Units",
-       subtitle = "Boston Area, Level: Census Block Group")
+       subtitle = "Boston Area, Level: Census Block Group") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("housingunits.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 6, height = 6, units = "in")
 
 ggplot(censusshp$medhincome) + 
   geom_sf(aes(fill = Income)) +
-  scale_fill_gradientn(colors = terrain.colors(10)) +
+  scale_fill_gradientn(colors = brewer.pal(n = 8, name = "GnBu")) +
   labs(title = "Median Household Income",
-       subtitle = "Boston Area, Level: Census Block Group")
+       subtitle = "Boston Area, Level: Census Block Group") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("medianincome.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 6, height = 6, units = "in")
 
 npop <- censusshp$poprace[censusshp$poprace$Total == 0, ]
 ggplot(censusshp$poprace) + 
   geom_sf(aes(fill = Total)) +
-  scale_fill_gradientn(colors = terrain.colors(10)) +
+  scale_fill_gradientn(colors = brewer.pal(n = 8, name = "YlOrBr")) +
   geom_sf(data = npop, fill = "grey28") +
   labs(title = "Total Number of Population",
-       subtitle = "Boston Area, Level: Census Block Group")
+       subtitle = "Boston Area, Level: Census Block Group") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("poptotal.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 6, height = 6, units = "in")
 
-rcols = c("lightblue", "khaki", "lightsalmon", "palegreen", "pink")
 ggplot(censusshp$poprace) + 
-  geom_sf(aes(fill = majority)) +
-  scale_fill_manual(values = rcols) +
+  geom_sf(aes(fill = Majority)) +
+  scale_fill_manual(values = brewer.pal(n = 5, name = "Set3")) +
   geom_sf(data = npop, fill = "grey28") +
   labs(title = "Majority Race of Population",
-       subtitle = "Boston Area, Level: Census Block Group")
+       subtitle = "Boston Area, Level: Census Block Group") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("poprace.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 8, height = 8, units = "in")
 
 nworkmeans <- censusshp$worktransmeans[censusshp$worktransmeans$Total == 0, ]
 ggplot(censusshp$worktransmeans) + 
-  geom_sf(aes(fill = pbike)) +
-  scale_fill_gradientn(colors = terrain.colors(10)) +
+  geom_sf(aes(fill = Percentage)) +
+  scale_fill_gradientn(colors = brewer.pal(n = 8, name = "Purples")) +
   geom_sf(data = nworkmeans, fill = "grey28") +
   labs(title = "Percentage of Workers Riding the Bike to Work",
-       subtitle = "Boston Area, Level: Census Block Group")
+       subtitle = "Boston Area, Level: Census Block Group") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("workmeans.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 6, height = 6, units = "in")
 ```

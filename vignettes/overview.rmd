@@ -50,8 +50,6 @@ include_graphics("../vignettes/fig/bike2015.jpeg")
 include_graphics("../vignettes/fig/bike2016.jpeg")
 include_graphics("../vignettes/fig/bike2017.jpeg")
 include_graphics("../vignettes/fig/bike2018.jpeg")
-imlist <- list.files("../vignettes/fig/", pattern = "bike20", full.names = TRUE)
-include_graphics(imlist)
 ```
 
 
@@ -127,9 +125,9 @@ bikeByMonth2018 %>% ggplot(., aes(x = month, y = records)) +
 
 Bluebikes also provides another csv file recording the GPS coordinates and the number of docks for each station. The number of trip for each station will be summarized from the trip dataset and joined to the spatial feature of bike station for hot spot and cluster analyses. The figure below presents Bluebikes stations and public transportation in Boston area. 
 
-```{r, waring=FALSE, message=FALSE, fig.width=6, fig.height=4, fig.align = "center"}
-include_graphics("../vignettes/fig/bikestations.png")
-```
+
+![](../vignettes/fig/bikestations.png){width=90%}
+
 
 Census data at block group scale is used to extract the demographic characteristics of neighboring community, thus drawing the profile of station clusters. Topics focused in this project are:
 
@@ -142,19 +140,21 @@ Housing units
 Means of transportation to work
 
 The source of census data is the estimates of 2017 from 2013-2017 American Community Survey 5-Year Estimates. The following figures visualize the census data, in which grey polygons represent no data. 
-```{r, waring=FALSE, message=FALSE, fig.width=6, fig.height=4, fig.align = "center"}
-include_graphics("../vignettes/fig/housingunits.png")
-include_graphics("../vignettes/fig/medianincome.png")
-include_graphics("../vignettes/fig/poptotal.png")
-include_graphics("../vignettes/fig/poprace.png")
-include_graphics("../vignettes/fig/workmeans.png")
-```
+
+
+![](../vignettes/fig/housingunits.png){width=45%} 
+![](../vignettes/fig/medianincome.png){width=45%}
+
+![](../vignettes/fig/poptotal.png){width=45%} 
+![](../vignettes/fig/poprace.png){width=45%}
+
+![](../vignettes/fig/workmeans.png){width=45%}
+
 
 Shapefiles of Boston area, public transportation, colleges and universities are downloaded from MassGIS, which may contribute to the analysis on latent factors of bike usage. The figure below shows colleges and universities in Boston area.
 
-```{r, waring=FALSE, message=FALSE, fig.width=6, fig.height=4, fig.align = "center"}
-include_graphics("../vignettes/fig/colleges.png")
-```
+
+![](../vignettes/fig/colleges.png){width=90%}
 
 
 The code processing station and census data is attached below. - MZ
@@ -168,6 +168,8 @@ library(ggplot2)
 library(rgdal)
 library(sf)
 library(gstat)
+library(gridExtra)
+library(RColorBrewer)
 
 # Data path
 dataPath <- "D:/R_final/BikeSharing_project/BostonBikeSharingSystem/Data/SocDem"
@@ -202,10 +204,10 @@ is.na(census$medhincome) <- !census$medhincome
 # Add fields for visualization
 popdata <- census$poprace %>% select(-GEOID10, -Total)
 census$poprace <- census$poprace %>%
-  mutate(majority = colnames(popdata)[max.col(popdata, ties.method = "first")])
+  mutate(Majority = colnames(popdata)[max.col(popdata, ties.method = "first")])
 
 census$worktransmeans <- census$worktransmeans %>% 
-  mutate(pbike = Bicycle / Total)
+  mutate(Percentage = Bicycle / Total)
 
 # Change the class of GEOID10 in census dataset for join
 census <- sapply(census, function(x) {
@@ -235,10 +237,12 @@ ggplot(sa %>% st_union()) +
                                             list(linetype = 
                                                    c("blank", "solid", "solid"),
                                                  shape = c(20, NA, NA)))) +
-    labs(title = "Bluebikes Stations in Boston Area") +
-  theme_minimal()
+  labs(title = "Bluebikes Stations in Boston Area") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("bikestations.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 6, height = 6, units = "in")
 
 ggplot(sa %>% st_union()) +
   geom_sf(aes(fill = "Study Area")) +
@@ -251,56 +255,72 @@ ggplot(sa %>% st_union()) +
                      guide = guide_legend(override.aes = 
                                             list(linetype = "blank",
                                                  shape = 18))) +
-    labs(title = "Colleges and Universities in Boston Area") +
-  theme_minimal()
+  labs(title = "Colleges and Universities in Boston Area") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("colleges.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 6, height = 6, units = "in")
 
 ggplot(censusshp$housingunit) + 
   geom_sf(aes(fill = Total)) +
-  scale_fill_gradientn(colors = terrain.colors(7)) +
+  scale_fill_gradientn(colors = brewer.pal(n = 8, name = "Oranges")) +
   labs(title = "Number of Housing Units",
-       subtitle = "Boston Area, Level: Census Block Group")
+       subtitle = "Boston Area, Level: Census Block Group") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("housingunits.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 6, height = 6, units = "in")
 
 ggplot(censusshp$medhincome) + 
   geom_sf(aes(fill = Income)) +
-  scale_fill_gradientn(colors = terrain.colors(10)) +
+  scale_fill_gradientn(colors = brewer.pal(n = 8, name = "GnBu")) +
   labs(title = "Median Household Income",
-       subtitle = "Boston Area, Level: Census Block Group")
+       subtitle = "Boston Area, Level: Census Block Group") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("medianincome.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 6, height = 6, units = "in")
 
 npop <- censusshp$poprace[censusshp$poprace$Total == 0, ]
 ggplot(censusshp$poprace) + 
   geom_sf(aes(fill = Total)) +
-  scale_fill_gradientn(colors = terrain.colors(10)) +
+  scale_fill_gradientn(colors = brewer.pal(n = 8, name = "YlOrBr")) +
   geom_sf(data = npop, fill = "grey28") +
   labs(title = "Total Number of Population",
-       subtitle = "Boston Area, Level: Census Block Group")
+       subtitle = "Boston Area, Level: Census Block Group") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("poptotal.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 6, height = 6, units = "in")
 
-rcols = c("lightblue", "khaki", "lightsalmon", "palegreen", "pink")
 ggplot(censusshp$poprace) + 
-  geom_sf(aes(fill = majority)) +
-  scale_fill_manual(values = rcols) +
+  geom_sf(aes(fill = Majority)) +
+  scale_fill_manual(values = brewer.pal(n = 5, name = "Set3")) +
   geom_sf(data = npop, fill = "grey28") +
   labs(title = "Majority Race of Population",
-       subtitle = "Boston Area, Level: Census Block Group")
+       subtitle = "Boston Area, Level: Census Block Group") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("poprace.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 6, height = 6, units = "in")
 
 nworkmeans <- censusshp$worktransmeans[censusshp$worktransmeans$Total == 0, ]
 ggplot(censusshp$worktransmeans) + 
-  geom_sf(aes(fill = pbike)) +
-  scale_fill_gradientn(colors = terrain.colors(10)) +
+  geom_sf(aes(fill = Percentage)) +
+  scale_fill_gradientn(colors = brewer.pal(n = 8, name = "Purples")) +
   geom_sf(data = nworkmeans, fill = "grey28") +
   labs(title = "Percentage of Workers Riding the Bike to Work",
-       subtitle = "Boston Area, Level: Census Block Group")
+       subtitle = "Boston Area, Level: Census Block Group") +
+  theme(axis.title  = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ggsave("workmeans.png", path = "../vignettes/fig", dpi = 120,
-       width = 6, height = 4, units = "in")
+       width = 6, height = 6, units = "in")
 ```
 
 
