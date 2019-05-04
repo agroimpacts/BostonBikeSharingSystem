@@ -146,7 +146,7 @@ npop <- censusshp$poprace[censusshp$poprace$Total == 0, ]
 ggplot(censusshp$poprace) + 
   geom_sf(aes(fill = Total)) +
   scale_fill_gradientn(colors = brewer.pal(n = 8, name = "YlOrBr")) +
-  geom_sf(data = npop, fill = "grey28") +
+  geom_sf(data = npop, fill = "grey48") +
   labs(title = "Total Number of Population",
        subtitle = "Boston Area, Level: Census Block Group") +
   theme(axis.title  = element_blank(),
@@ -158,7 +158,7 @@ ggsave("poptotal.png", path = "../vignettes/fig", dpi = 120,
 ggplot(censusshp$poprace) + 
   geom_sf(aes(fill = Majority)) +
   scale_fill_manual(values = brewer.pal(n = 5, name = "Set3")) +
-  geom_sf(data = npop, fill = "grey28") +
+  geom_sf(data = npop, fill = "grey48") +
   labs(title = "Majority Race of Population",
        subtitle = "Boston Area, Level: Census Block Group") +
   theme(axis.title  = element_blank(),
@@ -171,7 +171,7 @@ nworkmeans <- censusshp$worktransmeans[censusshp$worktransmeans$Total == 0, ]
 ggplot(censusshp$worktransmeans) + 
   geom_sf(aes(fill = Percentage)) +
   scale_fill_gradientn(colors = brewer.pal(n = 8, name = "Purples")) +
-  geom_sf(data = nworkmeans, fill = "grey28") +
+  geom_sf(data = nworkmeans, fill = "grey48") +
   labs(title = "Percentage of Workers Riding the Bike to Work",
        subtitle = "Boston Area, Level: Census Block Group") +
   theme(axis.title  = element_blank(),
@@ -179,4 +179,26 @@ ggplot(censusshp$worktransmeans) +
         axis.ticks = element_blank())
 ggsave("workmeans.png", path = "../vignettes/fig", dpi = 120,
        width = 6, height = 6, units = "in")
+
+
+##########################################################################
+#tmap tmshape
+
+
+Path15 <- dir("D:/R_final/BikeSharing_project/BlueBike/2015", 
+                  pattern = ".csv", full.names = TRUE)
+# Read in trip data
+names15 <- Path15 %>% basename() %>% substr(., start = 1, stop = 13)
+trips15 <- Path15 %>% 
+   map(function(x) {
+     read_csv(x) %>% 
+       select()
+   }) %>% set_names(names15)
+tPath15 <- dir("D:/R_final/BikeSharing_project/BlueBike/2015", 
+                  pattern = "201502", full.names = TRUE)
+ttttrips15 <- tPath15 %>% 
+   map(function(x) {
+     read_csv(x) 
+   })
+ttttrips15[1] %>% select(-"start station longitude")
 ```
