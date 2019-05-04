@@ -1,0 +1,59 @@
+---
+title: "Boston Bike Sharing System Analysis"
+author: "Piaotian Jin and Mengyi Zhang"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+    fig_caption: yes
+    number_sections: yes
+    toc_depth: 3
+    toc: yes
+    css: unit.css
+vignette: >
+  %\VignetteIndexEntry{Boston Bike Sharing System Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  fig.align = "center",
+  comment = "#>"
+)
+```
+
+# Introduction
+
+Bike-sharing  system  refers  to  a  public  transportation service system in urban areas offering bikes for shared use to individuals in a relatively short period of time (about 30 − 45 minutes)  for  free  or  with  very  low  charges. Through bike sharing system, people can borrow bikes from nearby stations and return bikes to any stations in the city, which can be used as a alternative to private vehicles and regular public transportation, like buses and subways. As a green way to get around, bike sharing system can relieve the traffic jam in big cities, reduce the emission of harmful gases from motor vehicles, and improve the first mile and last mile connection to other kinds of transits. Therefore, bike sharing system has received more and more attention in recent years. In 2004, there are about 13 bike sharing systems around the world. But now, there are over 850 bike sharing systems globally. More and more big cities have established bike sharing systems, like Chicago (Divvy Bike), San Francisco (Bay Area Bike Share), New York (Citi Bike) and Boston (Bluebikes).
+
+Boston’s original bike sharing system, Hubway, was launched in Boston on July 28, 2011 with 61 stations and 600 bicycles. In 2018, the municipal owners announced a six-year marketing deal with Blue Cross Blue Shield of Massachusetts and relaunch under the name of Bluebikes. From 2011 to 2018, more stations and more bikes were added. Now, Bluebikes has more than 2,500 bikes and over 260 stations across Boston, Brookline, Cambridge and Somerville.
+
+This project aims to explore the usage patterns of Boston’s bike sharing system, Bluebikes, thus help decision makers to manage the bike sharing system more properly, and promote the full use of Bluebikes. The primary objectives includes:
+
+1. Explore the usage of Bluebikess from 2015 to 2018. Visualize how the number of use and trip durations change among different months. Find out which months are people more like to use bike sharing system.
+
+2. Use Linear Regression to figure out if there are any relationships between the number of use and the weather (including temperature and precipitation). Find out what kind of weather are people more like to use bike sharing system.
+
+3. Use hot spot analysis to find out which stations are most popular, what kind of destinations are most popular, what kind of originals are most popular, and how they changed from 2015 to 2018.
+4. Join census information to hot spot clusters. Analyze the demographic characteristics in areas of hot/cold spot clusters.
+5. Use Poisson mixture model to process stations trip count data, extract station clusters based on EM algorithm, and analyze the clusters with census data to find out latent factors contributing to the use of bike sharing system.
+
+
+
+# Methods
+## Bluebikes’ Trips Exploration
+Bluebikes’ trips data are downloaded from Bluebikes’ website: https://www.bluebikes.com/system-data.
+The data includes following information: trip duration (seconds), start time and date, stop time and date, start station name, start station latitude and longitude, end station name, end station latitude and longitude, bike ID, user type (casual or member), birth year, and gender. 
+
+Analyses will be performed on the data from January 2015 to December 2018 in order to generate a comprehensive understanding of the sharing system. Figures below are histograms of Bluebikes trip data from 2015 to 2018.
+
+
+
+# Results
+
+# Discussion
+
+
