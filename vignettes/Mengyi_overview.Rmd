@@ -1087,7 +1087,7 @@ tm_shape(c18_P) +
 tm_add_legend(type = "line", labels = "Bus Routes", col = "honeydew2") +
 tm_add_legend(type = "line", labels = "Subway Routes", col = "orange") +
 tm_layout(main.title = 
-            "Station Usage Profile Cluster \n- Destination Service 2018",
+            "Station Usage Profile Cluster \n- All Service 2018",
           legend.outside = TRUE, legend.outside.position = "bottom",
           legend.stack = "horizontal", legend.title.size = .5,
           main.title.size = .8) +
