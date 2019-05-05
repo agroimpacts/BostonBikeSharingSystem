@@ -37,7 +37,7 @@ This project aims to explore the usage patterns of Boston’s bike sharing syste
 
 1. Explore the usage of Bluebikess from 2015 to 2018. Visualize how the number of use and trip durations change among different months. Find out which months are people more like to use bike sharing system.
 2. Use Linear Regression to figure out if there are any relationships between the number of use and the weather (including temperature and precipitation). Find out what kind of weather are people more like to use bike sharing system.
-3. Use hot spot analysis (Getis-Ord Gi) to find out which census blocks are most popular for using bike sharing system, which census blocks are most popular as destinations for using bike sharing system, which census blocks are most popular as origins for using bike sharing system, and how they changed from 2015 to 2018. Analyze the demographic characteristics in areas of hot/cold spot clusters.
+3. Use hot spot analysis (Getis-Ord Gi) to find out which census blocks are more popular for using bike sharing system and how they changed from 2015 to 2018. Analyze the demographic characteristics in areas of hot/cold spot clusters.
 4. Use Poisson mixture model to process stations trip count data, extract station clusters based on EM algorithm, and analyze the clusters with census data to find out latent factors contributing to the use of bike sharing system.
 
 
@@ -135,42 +135,8 @@ b4 <- bikeByMonth2018 %>% ggplot(., aes(x = month, y = records)) +
 grid.arrange(b1, b2, b3, b4, ncol = 2)
 ```
 
-The method to plot mean durations by month and median durations by month is the same as above. The code is attached below.
+The method to plot median durations by month is the same as above. The code is attached below.
 ```{r, eval = FALSE}
-# Plot Average Trip Durations
-mean1 <- bikeByMonth2015 %>% ggplot(., aes(x = month, y = mean_duration / 60)) +
-  geom_bar(stat = "identity") +
-  ylim(0, 40) +
-  scale_x_continuous(breaks=c(1:12)) +
-  ylab("Average Trip Duration (minutes)") +
-  xlab("Month") +
-  ggtitle("Average trip durations by month in 2015")
-
-mean2 <- bikeByMonth2016 %>% ggplot(., aes(x = month, y = mean_duration / 60)) +
-  geom_bar(stat = "identity") +
-  ylim(0, 40) +
-  scale_x_continuous(breaks=c(1:12)) +
-  ylab("") +
-  xlab("Month") +
-  ggtitle("Average trip durations by month in 2016")
-
-mean3 <- bikeByMonth2017 %>% ggplot(., aes(x = month, y = mean_duration / 60)) +
-  geom_bar(stat = "identity") +
-  ylim(0, 40) +
-  scale_x_continuous(breaks=c(1:12)) +
-  ylab("Average Trip Duration (minutes)") +
-  xlab("Month") +
-  ggtitle("Average trip durations by month in 2017")
-
-mean4 <- bikeByMonth2018 %>% ggplot(., aes(x = month, y = mean_duration / 60)) +
-  geom_bar(stat = "identity") +
-  ylim(0, 40) +
-  scale_x_continuous(breaks=c(1:12)) +
-  ylab("") +
-  xlab("Month") +
-  ggtitle("Average trip durations by month in 2018")
-grid.arrange(mean1, mean2, mean3, mean4, ncol = 2)
-
 # Plot Median Trip Durations
 median1 <- bikeByMonth2015 %>% ggplot(., aes(x = month, y = median_duration / 60)) +
   geom_bar(stat = "identity") +
@@ -249,7 +215,7 @@ summary(re_pre_lm)
 
 ## Hot Spot Analysis
 
-At this section, we want to use hot spot analysis (Getis-Ord Gi) to find out which census blocks are most popular for using bike sharing system, which census blocks are most popular as destinations for using bike sharing system, which census blocks are most popular as origins for using bike sharing system, and how they changed from 2015 to 2018.
+At this section, we want to use hot spot analysis (Getis-Ord Gi) to find out which census blocks are most popular for using bike sharing system, and how they changed from 2015 to 2018.
 
 ### Census Blocks Data Preparation - MZ
 
@@ -396,6 +362,10 @@ censusSum2018 <- censusAll_sf[[4]] %>% left_join(., allSum2018, by = "GEOID10") 
 censusAll_sf <- list(censusSum2015, censusSum2016, censusSum2017, censusSum2018)
 ```
 
+`censusAll_sf[1]` is like this:
+
+![](../vignettes/fig/census_all_1.png){width=98%} 
+
 ### Hot Spot Analysis - PJ
 
 To perform hot spot analysis, we use `localG` function from `spdep` package. `localG` works on sp object, so we use package `sp` to transform sf object to sp object. We use `tmap` package to visualize the results.
@@ -404,7 +374,7 @@ library(sp)
 library(spdep)
 library(tmap)
 ```
-The code to perform hot spot analysis is attached below. First, we transform sf object to sp object. Second, we use `poly2nb` to define neighbour and `nb2listw` to define neighbour weight. Third, we use `localG` to calculate Getis-Ord Gi values. We calculate 3 Getis-Ord Gi values for each census block, one is based on the total number of usage in the census block, one is based on the number of trips that start from the census block, and one is based on the number of trips that end at the census block. Finally, we add Getis-Ord Gi values to census blocks. 
+The code to perform hot spot analysis is attached below. First, we transform sf object to sp object. Second, we use `poly2nb` to define neighbour and `nb2listw` to define neighbour weight. Third, we use `localG` to calculate Getis-Ord Gi values. Finally, we add Getis-Ord Gi values to census blocks. 
 ```{r, eval = FALSE}
 # Transform sf object to sp object
 censusAll_sp <- lapply(censusAll_sf, function(x){return(as(x, "Spatial"))})
@@ -413,37 +383,19 @@ censusAll_nb <- lapply(censusAll_sp, function(x){return(poly2nb(x, queen = TRUE)
 # Define Neighbour Weight
 censusAll_w <- lapply(censusAll_nb, function(x){return(nb2listw(x, style = "W", 
                                                                 zero.policy = TRUE))})
-# Calculate local G for all records (destination + origin)
+# Calculate local G
 localg_SE <- mapply(function(X, Y){
   localG(X$all_records, Y)
 }, X = censusAll_sp, Y = censusAll_w)
 
-# Calculate local G for origin
-localg_S <- mapply(function(X, Y){
-  localG(X$s_records, Y)
-}, X = censusAll_sp, Y = censusAll_w)
-
-# Calculate local G for destination
-localg_E <- mapply(function(X, Y){
-  localG(X$e_records, Y)
-}, X = censusAll_sp, Y = censusAll_w)
-
 # Add local G value to census data
-census_G2015 <- censusAll_sf[[1]] %>% mutate(G_SE = as.numeric(localg_SE[[1]]),
-                                              G_S = as.numeric(localg_S[[1]]),
-                                              G_E = as.numeric(localg_E[[1]])) %>% drop_na(G_SE)
-census_G2016 <- censusAll_sf[[2]] %>% mutate(G_SE = as.numeric(localg_SE[[2]]),
-                                              G_S = as.numeric(localg_S[[2]]),
-                                              G_E = as.numeric(localg_E[[2]])) %>% drop_na(G_SE)
-census_G2017 <- censusAll_sf[[3]] %>% mutate(G_SE = as.numeric(localg_SE[[3]]),
-                                              G_S = as.numeric(localg_S[[3]]),
-                                              G_E = as.numeric(localg_E[[3]])) %>% drop_na(G_SE)
-census_G2018 <- censusAll_sf[[4]] %>% mutate(G_SE = as.numeric(localg_SE[[4]]),
-                                              G_S = as.numeric(localg_S[[4]]),
-                                              G_E = as.numeric(localg_E[[4]])) %>% drop_na(G_SE)
+census_G2015 <- censusAll_sf[[1]] %>% mutate(G_SE = as.numeric(localg_SE[[1]])) %>% drop_na(G_SE)
+census_G2016 <- censusAll_sf[[2]] %>% mutate(G_SE = as.numeric(localg_SE[[2]])) %>% drop_na(G_SE)
+census_G2017 <- censusAll_sf[[3]] %>% mutate(G_SE = as.numeric(localg_SE[[3]])) %>% drop_na(G_SE)
+census_G2018 <- censusAll_sf[[4]] %>% mutate(G_SE = as.numeric(localg_SE[[4]])) %>% drop_na(G_SE)
 ```
 
-To visualize the results of hot spot analysis, we use `tmap` package. The code to plot all usages clusters is attached below.
+To visualize the results of hot spot analysis, we use `tmap` package. The code to plot clusters is attached below.
 ```{r, eval = FALSE}
 # 2015 Hot Spot Map - All Usages
 breaks <- c(min(census_G2015$G_SE), 1.65, 1.96, 2.58, 
@@ -490,7 +442,6 @@ tm_shape(sa, unit = "mi") + tm_polygons(col = "grey90") +
             legend.outside = F) 
 ```
 
-The methods to plot original usages clusters and destination usages clusters are the same as above.
 
 ### Demographic Characteristics Exploration - PJ
 In order to extract demographic Characteristics, we create 2 functions. `join_census` join census information to hot and cold clusters. Census information includes housing units, median household income, population, majority race, and the percentage of using bikes to work. `G_Class` categorize Getis-Ord Gi values into 7 classes. Following table explains the meaning of each class.
@@ -517,20 +468,6 @@ G_Class <- function(x){
     mutate(GSE_Class = ifelse((G_SE < 2.58 & G_SE >= 1.96), 2, GSE_Class)) %>% 
     mutate(GSE_Class = ifelse((G_SE > -1.96 & G_SE < -1.65), -1, GSE_Class)) %>% 
     mutate(GSE_Class = ifelse((G_SE < 1.96 & G_SE > 1.65), 1, GSE_Class)) %>% 
-    # categorize Origins Clusters
-    mutate(GS_Class = ifelse(G_S <= -2.58, -3, 0)) %>%
-    mutate(GS_Class = ifelse(G_S >= 2.58, 3, GS_Class)) %>%      
-    mutate(GS_Class = ifelse((G_S > -2.58 & G_S <= -1.96), -2, GS_Class)) %>% 
-    mutate(GS_Class = ifelse((G_S < 2.58 & G_S >= 1.96), 2, GS_Class)) %>% 
-    mutate(GS_Class = ifelse((G_S > -1.96 & G_S < -1.65), -1, GS_Class)) %>% 
-    mutate(GS_Class = ifelse((G_S < 1.96 & G_S > 1.65), 1, GS_Class)) %>% 
-    # categorize Destinations Clusters
-    mutate(GE_Class = ifelse(G_E <= -2.58, -3, 0)) %>%
-    mutate(GE_Class = ifelse(G_E >= 2.58, 3, GE_Class)) %>%      
-    mutate(GE_Class = ifelse((G_E > -2.58 & G_E <= -1.96), -2, GE_Class)) %>% 
-    mutate(GE_Class = ifelse((G_E < 2.58 & G_E >= 1.96), 2, GE_Class)) %>% 
-    mutate(GE_Class = ifelse((G_E > -1.96 & G_E < -1.65), -1, GE_Class)) %>% 
-    mutate(GE_Class = ifelse((G_E < 1.96 & G_E > 1.65), 1, GE_Class)) %>% 
     as_tibble()
   return(join_census(x_class))
 }
@@ -571,26 +508,75 @@ summarytable2016 <- G_Class(census_G2016)
 summarytable2017 <- G_Class(census_G2017)
 summarytable2018 <- G_Class(census_G2018)
 
+# Plot table for 2015
 library(grid)
-grid.table(summarytable2015)
-grid.table(summarytable2016)
-grid.table(summarytable2017)
-grid.table(summarytable2018)
+summarytable2015 %>% 
+  add_row(GEOID10 = "mean", Gi_Value = mean(.$Gi_Value), Gi_Class = mean(.$Gi_Class), 
+          Housing_Unit = mean(.$Housing_Unit),
+          Median_Income = mean(.$Median_Income, na.rm = TRUE),
+          Population = mean(.$Population), 
+          `Bike_Transform(%)` = mean(.$`Bike_Transform(%)`)) %>% 
+  add_row(GEOID10 = "median", Gi_Value = median(.$Gi_Value), 
+          Gi_Class = median(.$Gi_Class), Housing_Unit = median(.$Housing_Unit),
+          Median_Income = median(.$Median_Income, na.rm = TRUE),
+          Population = median(.$Population), 
+          `Bike_Transform(%)` = median(.$`Bike_Transform(%)`)) %>% grid.table()
 ```
 
 # Results
 ## Bluebikes’ Trips Exploration - PJ
-Figures below show the number of usage per month from 2015 to 2018.
+Figures below show the number of usage per month from 2015 to 2018. We can find that the number of trips is increasing from January to July, and arriving the highest point at July or August, and then decreasing from August to December. In May, June, July and August, people are more likely to use bike sharing system. There is a obvious increasing of trips during 2018 compared with 2015 to 2017, which may be relevant to Blue Cross Blue Shield of Massachusetts’ sponsoring. Blue Cross Blue Shield of Massachusetts sponsored Metro Boston’s bike share system in March 2018, and the name was changed to Bluebikes. As of May 2017, the system had deployed 180 stations with a fleet of over 1,600 bikes, while it has more than 2,500 bikes and over 260 stations in 2018. Since more and more stations are launched, it’s more and more convenient to use Bluebikes. Therefore, more and more people choose to use Bluebikes.
 
 ![](../vignettes/fig/records_per_month.jpeg){width=98%} 
 
-Figures below show the mean durations of trips per month from 2015 to 2018.
-
-![](../vignettes/fig/meandurations_per_month.jpeg){width=98%} 
- 
-Figures below show the median durations of trips per month from 2015 to 2018.
+Figures below show the median durations of trips per month from 2015 to 2018. We can find that the median trip durations are increasing from January to July, and arriving the highest point at July, and then decreasing from July to August, which is similar to the trend of the number of trips. We can also find that from June to August in 2018, the median trip durations are over 12.5 minutes, which is higher than all other months from 2015 to 2018. It means people are more likely to spend more time on Bluebikes.
 
 ![](../vignettes/fig/medianduration_per_month.jpeg){width=98%} 
+
+In conclusion, people are more likely to use Bluebikes from May to August. From 2015 to 2018, more and more people choose to use Bluebikes, and are willing to spend more time on one trip.
+
+## Linear Regression - PJ
+
+Figures below are the scatterplot of temperature and the number of trips and the linear regression results. From the scatterplot, we can find that there is positive relationship between temperature and the number of trips. From the linear regression results, we can find that the R-squared is 0.84, which means the linear regression explains 84% of the variance of the number of trips. The p-value of F-test is less than 0.01, which means the linear regression is statistically significant at 99% confidence level.
+
+![](../vignettes/fig/scatterplot_tem_rec.jpeg){width=49%}
+![](../vignettes/fig/re_tem_lm.png){width=49%}
+
+Figures below are the scatterplot of precipitation and the number of trips and the linear regression results. From the scatterplot, we can find that there is no obvious relationship between precipitation and the number of trips. From the linear regression results, we can find that the p-value of F-test is 0.53, which means there is no relationship between precipitation and the number of trips.
+
+![](../vignettes/fig/scatterplot_pre_rec.jpeg){width=49%}
+![](../vignettes/fig/re_pre_lm.png){width=49%}
+
+In conclusion, there is significant positive relationship between temperature and the number of trips. The higher the temperature, the more the people that would like to use Bluebikes. While there is no obvious relationship between precipitation and the number of trips.
+
+## Hot Spot Analysis - PJ
+
+Figure below shows Bluebikes’ usages clusters of 2015. Red polygons are hot clusters that are significant at 99% confidence level. Orange polygons are hot clusters that are significant at 95% confidence level. Yellow polygons are hot clusters that are significant at 90% confidence level.
+
+![](../vignettes/fig/hotspot2015_all.jpeg){width=98%}
+
+The table below shows the demographic characteristics of hot clusters (with Gi value be equal or greater than 1) and cold clusters (with Gi value be equal or smaller than -1). The demographic characteristics include housing units (Housing_Unit), median household income (Median_Income), population (Population), majority race (Majority_Race), and the percentage of population that use bikes to work (Bike_Transform(%)).
+
+![](../vignettes/fig/2015_all.jpeg){width=98%}
+ 
+From the hot spot analysis results of 2015, we can find that there is no cold clusters, which means there is no census block in which the usage of Bluebikes stations are significant low. There are two areas in red, one in Cambridge, and another in Boston. The red area in Cambridge contains Massachusetts Institute of Technology and near Charles river. The red area in Boston contains Christopher Columbus Park and Norman B. Leventhal Park. This indicates that people may more likely to use Blueblkes as a way to colleges and as a way to touring.
+
+From the table, we can find that the majority races in hot clusters are White and Asian. There is huge difference at the percentage of population that use bike to work, which may indicate most people who use Bluebikes do not use it as a method of transportation to work. The housing units, median household income, and population are varied from different census blocks, which may indicate that there is no group of people with certain demographic characteristics who are more willing to use Bluebikes. The results of 2016, 2017 and 2018 are similar, which can be accessed at ../vignettes/fig/.
+
+
+Figure below is hot spot analysis results of 2016. There is no cold cluster, which is the same as the results of 2015. But compared to 2015, most hot clusters of 2016 are in Cambridge, and concentrated near Charles river. The north west red areas (hot spots at 99% confidence level) are near Harvard University, John F Kennedy Memorial Park and Riverbend Park. The south east red areas contain Massachusetts Institute of Technology and Anthony Costa Playground. This also indicates that people are more likely to use Bluebikes as a way to colleges and as a way to touring.
+
+![](../vignettes/fig/hotspot2016_all.jpeg){width=98%}
+
+Figures below are hot spot analysis results of 2017 and 2018. From the result of 2017, we can find that hot clusters are divided at downtown Boston and Cambridge near Charles river. The red areas in Cambridge is similar to 2016, except Harvard University area has lower Gi value compared to 2016. More hot clusters appeared at downtown Boston. The 3 red areas in downtown Boston are near Boston Common, Christopher Columbus Park and commercial areas. The result of 2018 indicates that more hot spots appeared at downtown Boston, and more hot spots are appeared at the whole study area. The red area in Cambridge is near Massachusetts Institute of Technology. The red areas in downtown Boston are near Tufts University School Of Medicine, Christopher Columbus Park, Norman B. Leventhal Park and some other parks and commercial areas.
+
+![](../vignettes/fig/hotspot2017_all.jpeg){width=49%}
+![](../vignettes/fig/hotspot2018_all.jpeg){width=49%}
+
+In conclusion, from 2015 to 2018, we can find that more and more hot spots appeared, and most of them concentrated at downtown Boston and Cambridge near Charles river. People are more likely to use Bluebikes as a way to colleges and as a way to touring, instead of as a method of transportation to work. 
+
+
+
 
 # Discussion
 
