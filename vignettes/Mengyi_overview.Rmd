@@ -43,7 +43,7 @@ bus <- dir(dataPath, pattern = "busroute.shp", full.names = TRUE) %>%
   st_read()
 colleges <- dir(dataPath, pattern = "universities.shp", full.names = TRUE) %>%
   st_read()
-bstation <- dir(bikePath, pattern = "Hubway_Stations_as_of_July_2017.csv", 
+bstation <- dir(bikePath, pattern = "Hubway_Stations_as_of_July_2018.csv", 
                 full.names = TRUE) %>% read_csv() %>% 
   st_as_sf(., coords = c("Longitude", "Latitude"), crs = 4326) %>% 
   st_transform(x = ., crs = st_crs(sa))
@@ -51,7 +51,7 @@ bstation <- dir(bikePath, pattern = "Hubway_Stations_as_of_July_2017.csv",
 # Read in census data and set the name for each dataset
 names <- censusPath %>% basename() %>% strsplit(., "[.]") %>% unlist
 census <- censusPath %>% 
-   map(function(x) {
+   purrr::map(function(x) {
      read_csv(x) %>% rename(GEOID10 = Id2) 
    }) %>% set_names(names[!names %in% "csv"])
 
@@ -182,23 +182,1091 @@ ggsave("workmeans.png", path = "../vignettes/fig", dpi = 120,
 
 
 ##########################################################################
-#tmap tmshape
+```
 
+```{r, waring=FALSE, message=FALSE, fig.align = "center"}
+library(mixtools)
+library(flexmix)
 
 Path15 <- dir("D:/R_final/BikeSharing_project/BlueBike/2015", 
                   pattern = ".csv", full.names = TRUE)
+Path16 <- dir("D:/R_final/BikeSharing_project/BlueBike/2016", 
+                  pattern = ".csv", full.names = TRUE)
+Path17 <- dir("D:/R_final/BikeSharing_project/BlueBike/2017", 
+                  pattern = ".csv", full.names = TRUE)
+Path18 <- dir("D:/R_final/BikeSharing_project/BlueBike/2018", 
+                  pattern = ".csv", full.names = TRUE)
+
 # Read in trip data
 names15 <- Path15 %>% basename() %>% substr(., start = 1, stop = 13)
 trips15 <- Path15 %>% 
-   map(function(x) {
+   purrr::map(function(x) {
      read_csv(x) %>% 
-       select()
+       select("tripduration", "starttime",  "stoptime",
+              "start station id", "end station id", "year", "month") %>%
+       rename(origin = "start station id", destination = "end station id") %>% 
+       mutate(origin = as.character(origin), 
+              destination = as.character(destination)) %>% 
+       mutate(c1 = as.character(starttime)) %>%
+       mutate(c2 = as.character(stoptime)) %>%
+       mutate(mdY = sub("\\s+.*", "", c1)) %>% 
+       mutate(weekday = as.Date(mdY, "%m/%d/%Y") %>% weekdays()) %>% 
+       mutate(shour = sub(":+.*", "", sub("*.+\\s", "", c1))) %>% 
+       mutate(ehour = sub(":+.*", "", sub("*.+\\s", "", c2))) %>% 
+       mutate(tripcount = 1) %>% 
+       select(-c1, -c2)
    }) %>% set_names(names15)
-tPath15 <- dir("D:/R_final/BikeSharing_project/BlueBike/2015", 
-                  pattern = "201502", full.names = TRUE)
-ttttrips15 <- tPath15 %>% 
-   map(function(x) {
-     read_csv(x) 
-   })
-ttttrips15[1] %>% select(-"start station longitude")
+
+names16 <- Path16 %>% basename() %>% substr(., start = 1, stop = 13)
+trips16 <- Path16 %>% 
+   purrr::map(function(x) {
+     read_csv(x) %>% 
+       select("tripduration", "starttime",  "stoptime",
+              "start station id", "end station id", "year", "month") %>%
+       rename(origin = "start station id", destination = "end station id") %>% 
+       mutate(origin = as.character(origin), 
+              destination = as.character(destination)) %>% 
+       mutate(c1 = as.character(starttime)) %>%
+       mutate(c2 = as.character(stoptime)) %>%
+       mutate(mdY = sub("\\s+.*", "", c1)) %>% 
+       mutate(weekday = as.Date(mdY, "%m/%d/%Y") %>% weekdays()) %>% 
+       mutate(shour = sub(":+.*", "", sub("*.+\\s", "", c1))) %>% 
+       mutate(ehour = sub(":+.*", "", sub("*.+\\s", "", c2))) %>% 
+       mutate(tripcount = 1) %>% 
+       select(-c1, -c2)
+   }) %>% set_names(names16)
+
+names17 <- Path17 %>% basename() %>% substr(., start = 1, stop = 13)
+trips17 <- Path17 %>% 
+   purrr::map(function(x) {
+     read_csv(x) %>% 
+       select("tripduration", "starttime",  "stoptime",
+              "start station id", "end station id", "year", "month") %>%
+       rename(origin = "start station id", destination = "end station id") %>% 
+       mutate(origin = as.character(origin), 
+              destination = as.character(destination)) %>% 
+       mutate(c1 = as.character(starttime)) %>%
+       mutate(c2 = as.character(stoptime)) %>%
+       mutate(mdY = sub("\\s+.*", "", c1)) %>% 
+       mutate(weekday = as.Date(mdY, "%m/%d/%Y") %>% weekdays()) %>% 
+       mutate(shour = sub(":+.*", "", sub("*.+\\s", "", c1))) %>% 
+       mutate(ehour = sub(":+.*", "", sub("*.+\\s", "", c2))) %>% 
+       mutate(tripcount = 1) %>% 
+       select(-c1, -c2)
+   }) %>% set_names(names17)
+
+# The sheet name and start/end time of 2018 is different from the others
+names18 <- Path18 %>% basename() %>% substr(., start = 1, stop = 13)
+trips18 <- Path18 %>% 
+   purrr::map(function(x) {
+     read_csv(x) %>% 
+       select("tripduration", "starttime",  "stoptime",
+              "start station id", "end station id", "year", "month") %>% 
+       rename(origin = "start station id", destination = "end station id") %>% 
+       mutate(origin = as.character(origin), 
+              destination = as.character(destination)) %>%
+       mutate(tripcount = 1)
+   }) %>% set_names(names18)
+
+# Combine monthly datasets into annual data frames
+df15 <- do.call("rbind", trips15) %>% na.omit()
+df16 <- do.call("rbind", trips16) %>% na.omit()
+df17 <- do.call("rbind", trips17) %>% na.omit()
+df18 <- do.call("rbind", trips18) %>% na.omit()
 ```
+
+
+```{r, waring=FALSE, message=FALSE, fig.align = "center"}
+#####
+# Annual summary by monthly usage profile
+#####
+
+library(mclust)
+
+# Year 2015####################################################################
+### Station as origin
+df15_start <- 
+  df15 %>% select(origin, tripduration, tripcount, month) %>%
+  group_by(origin, month) %>% 
+  summarise_all(funs(sum, median)) %>% 
+  select(origin, tripcount_sum, tripduration_median, month) %>% 
+  rename(sid = origin, 
+         scount = tripcount_sum, sduration = tripduration_median)
+
+# Count the total number of origin usage by month
+df15_startc <- df15_start %>% spread(month, scount) %>% rename(s1 = "1", s2 = "2",
+                                                s3 = "3", s4 = "4",
+                                                s5 = "5", s6 = "6",
+                                                s7 = "7", s8 = "8",
+                                                s9 = "9", s10 = "10",
+                                                s11 = "11", s12 = "12") %>% 
+  select(-sduration)
+# Convert NA to ""
+df15_startc[is.na(df15_startc)] <- ""
+
+# Merge rows ---> data for one station (sid) store in a singal row
+df15_startc <- df15_startc %>% group_by(sid) %>%
+  summarise_all(funs(trimws(paste(., collapse = ''))))
+# Convert the class of hourly count from string to numeric
+cols.num <- paste0("s", 1:12)
+df15_startc[cols.num] <- sapply(df15_startc[cols.num], as.numeric)
+# Fill no data with 0
+df15_startc[is.na(df15_startc)] <- 0
+
+# Get the annually median trip duration for each station
+df15_startd <- 
+  df15 %>% select(origin, tripduration) %>%
+  group_by(origin) %>% 
+  summarise_all(funs(median)) %>% 
+  rename(sid = origin, 
+         sduration = tripduration)
+
+# Station (origin) usage profile
+df15_startP <- left_join(df15_startc, df15_startd, by = "sid")
+###*******************************************************************
+
+### Station as destination
+df15_end <- 
+  df15 %>% select(destination, tripduration, tripcount, month) %>%
+  group_by(destination, month) %>% 
+  summarise_all(funs(sum, median)) %>% 
+  select(destination, tripcount_sum, tripduration_median, month) %>% 
+  rename(sid = destination, 
+         scount = tripcount_sum, sduration = tripduration_median)
+
+# Count the total number of destination usage by month
+df15_endc <- df15_end %>% spread(month, scount) %>% rename(e1 = "1", e2 = "2",
+                                                e3 = "3", e4 = "4",
+                                                e5 = "5", e6 = "6",
+                                                e7 = "7", e8 = "8",
+                                                e9 = "9", e10 = "10",
+                                                e11 = "11", e12 = "12") %>% 
+  select(-sduration)
+# Convert NA to ""
+df15_endc[is.na(df15_endc)] <- ""
+
+# Merge rows ---> data for one station (sid) store in a singal row
+df15_endc <- df15_endc %>% group_by(sid) %>%
+  summarise_all(funs(trimws(paste(., collapse = ''))))
+# Convert the class of hourly count from string to numeric
+cols.num <- paste0("e", 1:12)
+df15_endc[cols.num] <- sapply(df15_endc[cols.num], as.numeric)
+# Fill no data with 0
+df15_endc[is.na(df15_endc)] <- 0
+
+# Get the annually median trip duration for each station
+df15_endd <- 
+  df15 %>% select(destination, tripduration) %>%
+  group_by(destination) %>% 
+  summarise_all(funs(median)) %>% 
+  rename(sid = destination, 
+         eduration = tripduration)
+
+# Station (destination) usage profile
+df15_endP <- left_join(df15_endc, df15_endd, by = "sid")
+###*******************************************************************
+
+# Station usage profile
+df15_P <- full_join(df15_startP, df15_endP, by = "sid")
+# Convert NA to 0
+df15_P[is.na(df15_P)] <- 0
+
+fit15_1 <- Mclust(df15_startP)
+# p <- plot(fit) # plot results 
+summary(fit15_1) # display the best model
+fit15_1$classification
+
+fit15_2 <- Mclust(df15_endP)
+# p <- plot(fit) # plot results 
+summary(fit15_2) # display the best model
+fit15_2$classification
+
+fit15_3 <- Mclust(df15_P)
+# p <- plot(fit) # plot results 
+summary(fit15_3) # display the best model
+fit15_3$classification
+###############################################################################
+
+
+# Year 2016####################################################################
+### Station as origin
+df16_start <- 
+  df16 %>% select(origin, tripduration, tripcount, month) %>%
+  group_by(origin, month) %>% 
+  summarise_all(funs(sum, median)) %>% 
+  select(origin, tripcount_sum, tripduration_median, month) %>% 
+  rename(sid = origin, 
+         scount = tripcount_sum, sduration = tripduration_median)
+
+# Count the total number of origin usage by month
+df16_startc <- df16_start %>% spread(month, scount) %>% select(-sduration)
+
+# Rename spread columns
+n <- names(df16_startc)[names(df16_startc) %in% c(1:12)]
+names(df16_startc)[names(df16_startc) %in% c(0:12)] <- paste0("s", n)
+
+# Convert NA to ""
+df16_startc[is.na(df16_startc)] <- ""
+
+# Merge rows ---> data for one station (sid) store in a singal row
+df16_startc <- df16_startc %>% group_by(sid) %>%
+  summarise_all(funs(trimws(paste(., collapse = ''))))
+# Convert the class of hourly count from string to numeric
+cols.num <- paste0("s", n)
+df16_startc[cols.num] <- sapply(df16_startc[cols.num], as.numeric)
+# Fill no data with 0
+df16_startc[is.na(df16_startc)] <- 0
+
+# Get the annually median trip duration for each station
+df16_startd <- 
+  df16 %>% select(origin, tripduration) %>%
+  group_by(origin) %>% 
+  summarise_all(funs(median)) %>% 
+  rename(sid = origin, 
+         sduration = tripduration)
+
+# Station (origin) usage profile
+df16_startP <- left_join(df16_startc, df16_startd, by = "sid")
+###*******************************************************************
+
+### Station as destination
+df16_end <- 
+  df16 %>% select(destination, tripduration, tripcount, month) %>%
+  group_by(destination, month) %>% 
+  summarise_all(funs(sum, median)) %>% 
+  select(destination, tripcount_sum, tripduration_median, month) %>% 
+  rename(sid = destination, 
+         scount = tripcount_sum, sduration = tripduration_median)
+
+# Count the total number of destination usage by month
+df16_endc <- df16_end %>% spread(month, scount) %>% select(-sduration)
+
+# Rename spread columns
+n <- names(df16_endc)[names(df16_endc) %in% c(1:12)]
+names(df16_endc)[names(df16_endc) %in% c(0:12)] <- paste0("e", n)
+
+# Convert NA to ""
+df16_endc[is.na(df16_endc)] <- ""
+
+# Merge rows ---> data for one station (sid) store in a singal row
+df16_endc <- df16_endc %>% group_by(sid) %>%
+  summarise_all(funs(trimws(paste(., collapse = ''))))
+# Convert the class of hourly count from string to numeric
+cols.num <- paste0("e", n)
+df16_endc[cols.num] <- sapply(df16_endc[cols.num], as.numeric)
+# Fill no data with 0
+df16_endc[is.na(df16_endc)] <- 0
+
+# Get the annually median trip duration for each station
+df16_endd <- 
+  df16 %>% select(destination, tripduration) %>%
+  group_by(destination) %>% 
+  summarise_all(funs(median)) %>% 
+  rename(sid = destination, 
+         eduration = tripduration)
+
+# Station (destination) usage profile
+df16_endP <- left_join(df16_endc, df16_endd, by = "sid")
+###*******************************************************************
+
+# Station usage profile
+df16_P <- full_join(df16_startP, df16_endP, by = "sid")
+# Convert NA to 0
+df16_P[is.na(df16_P)] <- 0
+
+fit16_1 <- Mclust(df16_startP)
+# p <- plot(fit) # plot results 
+summary(fit16_1) # display the best model
+fit16_1$classification
+
+fit16_2 <- Mclust(df16_endP)
+# p <- plot(fit) # plot results 
+summary(fit16_2) # display the best model
+fit16_2$classification
+
+fit16_3 <- Mclust(df16_P)
+# p <- plot(fit) # plot results 
+summary(fit16_3) # display the best model
+fit16_3$classification
+###############################################################################
+
+# Year 2017####################################################################
+### Station as origin
+df17_start <- 
+  df17 %>% select(origin, tripduration, tripcount, month) %>%
+  group_by(origin, month) %>% 
+  summarise_all(funs(sum, median)) %>% 
+  select(origin, tripcount_sum, tripduration_median, month) %>% 
+  rename(sid = origin, 
+         scount = tripcount_sum, sduration = tripduration_median)
+
+# Count the total number of origin usage by month
+df17_startc <- df17_start %>% spread(month, scount) %>% select(-sduration)
+
+# Rename spread columns
+n <- names(df17_startc)[names(df17_startc) %in% c(1:12)]
+names(df17_startc)[names(df17_startc) %in% c(0:12)] <- paste0("s", n)
+
+# Convert NA to ""
+df17_startc[is.na(df17_startc)] <- ""
+
+# Merge rows ---> data for one station (sid) store in a singal row
+df17_startc <- df17_startc %>% group_by(sid) %>%
+  summarise_all(funs(trimws(paste(., collapse = ''))))
+# Convert the class of hourly count from string to numeric
+cols.num <- paste0("s", n)
+df17_startc[cols.num] <- sapply(df17_startc[cols.num], as.numeric)
+# Fill no data with 0
+df17_startc[is.na(df17_startc)] <- 0
+
+# Get the annually median trip duration for each station
+df17_startd <- 
+  df17 %>% select(origin, tripduration) %>%
+  group_by(origin) %>% 
+  summarise_all(funs(median)) %>% 
+  rename(sid = origin, 
+         sduration = tripduration)
+
+# Station (origin) usage profile
+df17_startP <- left_join(df17_startc, df17_startd, by = "sid")
+###*******************************************************************
+
+### Station as destination
+df17_end <- 
+  df17 %>% select(destination, tripduration, tripcount, month) %>%
+  group_by(destination, month) %>% 
+  summarise_all(funs(sum, median)) %>% 
+  select(destination, tripcount_sum, tripduration_median, month) %>% 
+  rename(sid = destination, 
+         scount = tripcount_sum, sduration = tripduration_median)
+
+# Count the total number of destination usage by month
+df17_endc <- df17_end %>% spread(month, scount) %>% select(-sduration)
+
+# Rename spread columns
+n <- names(df17_endc)[names(df17_endc) %in% c(1:12)]
+names(df17_endc)[names(df17_endc) %in% c(0:12)] <- paste0("e", n)
+
+# Convert NA to ""
+df17_endc[is.na(df17_endc)] <- ""
+
+# Merge rows ---> data for one station (sid) store in a singal row
+df17_endc <- df17_endc %>% group_by(sid) %>%
+  summarise_all(funs(trimws(paste(., collapse = ''))))
+# Convert the class of hourly count from string to numeric
+cols.num <- paste0("e", n)
+df17_endc[cols.num] <- sapply(df17_endc[cols.num], as.numeric)
+# Fill no data with 0
+df17_endc[is.na(df17_endc)] <- 0
+
+# Get the annually median trip duration for each station
+df17_endd <- 
+  df17 %>% select(destination, tripduration) %>%
+  group_by(destination) %>% 
+  summarise_all(funs(median)) %>% 
+  rename(sid = destination, 
+         eduration = tripduration)
+
+# Station (destination) usage profile
+df17_endP <- left_join(df17_endc, df17_endd, by = "sid")
+###*******************************************************************
+
+# Station usage profile
+df17_P <- full_join(df17_startP, df17_endP, by = "sid")
+# Convert NA to 0
+df17_P[is.na(df17_P)] <- 0
+
+fit17_1 <- Mclust(df17_startP)
+# p <- plot(fit) # plot results 
+summary(fit17_1) # display the best model
+fit17_1$classification
+
+fit17_2 <- Mclust(df17_endP)
+# p <- plot(fit) # plot results 
+summary(fit17_2) # display the best model
+fit17_2$classification
+
+fit17_3 <- Mclust(df17_P)
+# p <- plot(fit) # plot results 
+summary(fit17_3) # display the best model
+fit17_3$classification
+###############################################################################
+
+# Year 2018####################################################################
+### Station as origin
+df18_start <- 
+  df18 %>% select(origin, tripduration, tripcount, month) %>%
+  group_by(origin, month) %>% 
+  summarise_all(funs(sum, median)) %>% 
+  select(origin, tripcount_sum, tripduration_median, month) %>% 
+  rename(sid = origin, 
+         scount = tripcount_sum, sduration = tripduration_median)
+
+# Count the total number of origin usage by month
+df18_startc <- df18_start %>% spread(month, scount) %>% select(-sduration)
+
+# Rename spread columns
+n <- names(df18_startc)[names(df18_startc) %in% c(1:12)]
+names(df18_startc)[names(df18_startc) %in% c(0:12)] <- paste0("s", n)
+
+# Convert NA to ""
+df18_startc[is.na(df18_startc)] <- ""
+
+# Merge rows ---> data for one station (sid) store in a singal row
+df18_startc <- df18_startc %>% group_by(sid) %>%
+  summarise_all(funs(trimws(paste(., collapse = ''))))
+# Convert the class of hourly count from string to numeric
+cols.num <- paste0("s", n)
+df18_startc[cols.num] <- sapply(df18_startc[cols.num], as.numeric)
+# Fill no data with 0
+df18_startc[is.na(df18_startc)] <- 0
+
+# Get the annually median trip duration for each station
+df18_startd <- 
+  df18 %>% select(origin, tripduration) %>%
+  group_by(origin) %>% 
+  summarise_all(funs(median)) %>% 
+  rename(sid = origin, 
+         sduration = tripduration)
+
+# Station (origin) usage profile
+df18_startP <- left_join(df18_startc, df18_startd, by = "sid")
+###*******************************************************************
+
+### Station as destination
+df18_end <- 
+  df18 %>% select(destination, tripduration, tripcount, month) %>%
+  group_by(destination, month) %>% 
+  summarise_all(funs(sum, median)) %>% 
+  select(destination, tripcount_sum, tripduration_median, month) %>% 
+  rename(sid = destination, 
+         scount = tripcount_sum, sduration = tripduration_median)
+
+# Count the total number of destination usage by month
+df18_endc <- df18_end %>% spread(month, scount) %>% select(-sduration)
+
+# Rename spread columns
+n <- names(df18_endc)[names(df18_endc) %in% c(1:12)]
+names(df18_endc)[names(df18_endc) %in% c(0:12)] <- paste0("e", n)
+
+# Convert NA to ""
+df18_endc[is.na(df18_endc)] <- ""
+
+# Merge rows ---> data for one station (sid) store in a singal row
+df18_endc <- df18_endc %>% group_by(sid) %>%
+  summarise_all(funs(trimws(paste(., collapse = ''))))
+# Convert the class of hourly count from string to numeric
+cols.num <- paste0("e", n)
+df18_endc[cols.num] <- sapply(df18_endc[cols.num], as.numeric)
+# Fill no data with 0
+df18_endc[is.na(df18_endc)] <- 0
+
+# Get the annually median trip duration for each station
+df18_endd <- 
+  df18 %>% select(destination, tripduration) %>%
+  group_by(destination) %>% 
+  summarise_all(funs(median)) %>% 
+  rename(sid = destination, 
+         eduration = tripduration)
+
+# Station (destination) usage profile
+df18_endP <- left_join(df18_endc, df18_endd, by = "sid")
+###*******************************************************************
+
+# Station usage profile
+df18_P <- full_join(df18_startP, df18_endP, by = "sid")
+# Convert NA to 0
+df18_P[is.na(df18_P)] <- 0
+
+fit18_1 <- Mclust(df18_startP)
+# p <- plot(fit) # plot results 
+summary(fit18_1) # display the best model
+fit18_1$classification
+
+fit18_2 <- Mclust(df18_endP)
+# p <- plot(fit) # plot results 
+summary(fit18_2) # display the best model
+fit18_2$classification
+
+fit18_3 <- Mclust(df18_P)
+# p <- plot(fit) # plot results 
+summary(fit18_3) # display the best model
+fit18_3$classification
+###############################################################################
+
+### Allocate clustering code C
+df15_startP <- df15_startP %>% mutate(C = fit15_1$classification)
+df15_endP <- df15_endP %>% mutate(C = fit15_2$classification)
+df15_P <- df15_P %>% mutate(C = fit15_3$classification)
+
+df16_startP <- df16_startP %>% mutate(C = fit16_1$classification)
+df16_endP <- df16_endP %>% mutate(C = fit16_2$classification)
+df16_P <- df16_P %>% mutate(C = fit16_3$classification)
+
+df17_startP <- df17_startP %>% mutate(C = fit17_1$classification)
+df17_endP <- df17_endP %>% mutate(C = fit17_2$classification)
+df17_P <- df17_P %>% mutate(C = fit17_3$classification)
+
+df18_startP <- df18_startP %>% mutate(C = fit18_1$classification)
+df18_endP <- df18_endP %>% mutate(C = fit18_2$classification)
+df18_P <- df18_P %>% mutate(C = fit18_3$classification)
+
+```
+
+
+```{r, waring=FALSE, message=FALSE, fig.align = "center"}
+library(tmap)
+library(tmaptools)
+
+# Read raw dataset for the station latlon information
+station15 <- Path15 %>% 
+   purrr::map(function(x) {
+     read_csv(x) %>% 
+       select("start station id", "start station name",
+              "start station latitude", "start station longitude") %>%
+       rename(sid = "start station id", sname = "start station name",
+              lat = "start station latitude", lon = "start station longitude") %>%
+       mutate(sid  = as.character(sid)) %>%
+       distinct(sid, sname, lat, lon)
+   }) %>% set_names(names15)
+
+station16 <- Path16 %>% 
+   purrr::map(function(x) {
+     read_csv(x) %>% 
+       select("start station id", "start station name",
+              "start station latitude", "start station longitude") %>%
+       rename(sid = "start station id", sname = "start station name",
+              lat = "start station latitude", lon = "start station longitude") %>%
+       mutate(sid  = as.character(sid)) %>%
+       distinct(sid, sname, lat, lon)
+   }) %>% set_names(names16)
+
+station17 <- Path17 %>% 
+   purrr::map(function(x) {
+     read_csv(x) %>% 
+       select("start station id", "start station name",
+              "start station latitude", "start station longitude") %>%
+       rename(sid = "start station id", sname = "start station name",
+              lat = "start station latitude", lon = "start station longitude") %>%
+       mutate(sid  = as.character(sid)) %>%
+       distinct(sid, sname, lat, lon)
+   }) %>% set_names(names17)
+
+station18 <- Path18 %>% 
+   purrr::map(function(x) {
+     read_csv(x) %>% 
+       select("start station id", "start station name",
+              "start station latitude", "start station longitude") %>%
+       rename(sid = "start station id", sname = "start station name",
+              lat = "start station latitude", lon = "start station longitude") %>%
+       mutate(sid  = as.character(sid)) %>%
+       distinct(sid, sname, lat, lon)
+   }) %>% set_names(names18)
+
+# Combine monthly datasets into annual data frames
+# sn1X store sid and the latlon information of stations used in 201x
+sn15 <- do.call("rbind", station15) %>% 
+  na.omit() %>% distinct(sid, lat, lon)
+sn16 <- do.call("rbind", station16) %>% 
+  na.omit() %>% distinct(sid, lat, lon)
+sn17 <- do.call("rbind", station17) %>% 
+  na.omit() %>% distinct(sid, lat, lon)
+sn18 <- do.call("rbind", station18) %>% 
+  na.omit() %>% distinct(sid, lat, lon)
+# Delet duplicated rows caused by slight diffrecences in lat/lon
+sn15 <- sn15[!duplicated(sn15$sid), ]
+sn16 <- sn16[!duplicated(sn16$sid), ]
+sn17 <- sn17[!duplicated(sn17$sid), ]
+sn18 <- sn18[!duplicated(sn18$sid), ]
+
+### Visualize annually bike clusters
+# Get sid and cluster code (C)
+c15_startP <- df15_startP %>% select(sid, C) %>% mutate(C = as.character(C))
+c15_endP <- df15_endP %>% select(sid, C) %>% mutate(C = as.character(C))
+c15_P <- df15_P %>% select(sid, C) %>% mutate(C = as.character(C))
+
+c16_startP <- df16_startP %>% select(sid, C) %>% mutate(C = as.character(C))
+c16_endP <- df16_endP %>% select(sid, C) %>% mutate(C = as.character(C))
+c16_P <- df16_P %>% select(sid, C) %>% mutate(C = as.character(C))
+
+c17_startP <- df17_startP %>% select(sid, C) %>% mutate(C = as.character(C))
+c17_endP <- df17_endP %>% select(sid, C) %>% mutate(C = as.character(C))
+c17_P <- df17_P %>% select(sid, C) %>% mutate(C = as.character(C))
+
+c18_startP <- df18_startP %>% select(sid, C) %>% mutate(C = as.character(C))
+c18_endP <- df18_endP %>% select(sid, C) %>% mutate(C = as.character(C))
+c18_P <- df18_P %>% select(sid, C) %>% mutate(C = as.character(C))
+
+# Join cluster code (C) and latlon, transform df to sf
+# 2015
+c15_s <- left_join(c15_startP, sn15, by = "sid") %>% 
+  st_as_sf(., coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(x = ., crs = st_crs(sa))
+c15_e <- left_join(c15_endP, sn15, by = "sid") %>% 
+  st_as_sf(., coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(x = ., crs = st_crs(sa))
+c15_P <- left_join(c15_P, sn15, by = "sid") %>% 
+  st_as_sf(., coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(x = ., crs = st_crs(sa))
+
+# 2016
+c16_s <- left_join(c16_startP, sn16, by = "sid") %>% 
+  st_as_sf(., coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(x = ., crs = st_crs(sa))
+c16_e <- left_join(c16_endP, sn16, by = "sid") %>% 
+  st_as_sf(., coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(x = ., crs = st_crs(sa))
+c16_P <- left_join(c16_P, sn16, by = "sid") %>% 
+  st_as_sf(., coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(x = ., crs = st_crs(sa))
+
+# 2017
+c17_s <- left_join(c17_startP, sn17, by = "sid") %>% 
+  st_as_sf(., coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(x = ., crs = st_crs(sa))
+c17_e <- left_join(c17_endP, sn17, by = "sid") %>% 
+  st_as_sf(., coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(x = ., crs = st_crs(sa))
+c17_P <- inner_join(c17_P, sn17, by = "sid") %>% 
+  st_as_sf(., coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(x = ., crs = st_crs(sa))
+
+# 2018
+c18_s <- left_join(c18_startP, sn18, by = "sid") %>% 
+  st_as_sf(., coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(x = ., crs = st_crs(sa))
+
+# Delet data with missing latlon
+c18_endP <- subset(c18_endP, sid != "158")
+c18_P <- subset(c18_P, sid != "158")
+c18_e <- left_join(c18_endP, sn18, by = "sid")
+c18_P <- left_join(c18_P, sn18, by = "sid")
+c18_e <- c18_e[complete.cases(c18_e), ]
+c18_P <- c18_P[complete.cases(c18_P), ]
+
+c18_e <- c18_e %>% 
+  st_as_sf(., coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(x = ., crs = st_crs(sa))
+c18_P <-c18_P %>% 
+  st_as_sf(., coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(x = ., crs = st_crs(sa))
+
+bstation <- dir(bikePath, pattern = "Hubway_Stations_as_of_July_2017.csv", 
+                full.names = TRUE) %>% read_csv() %>% 
+  st_as_sf(., coords = c("Longitude", "Latitude"), crs = 4326) %>% 
+  st_transform(x = ., crs = st_crs(sa))
+
+bus2 <- st_zm(bus)
+subway2 <- st_zm(subway)
+# Plot clusters
+tmap_mode("plot")
+
+# 2015
+#***************************************************************************
+p15_s <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(bus2) +
+  tm_lines(col = "honeydew2") +
+tm_shape(subway2) +
+  tm_lines(col = "orange") +
+tm_shape(c15_s) +
+  tm_dots(shape = 16, size = .15, col = "C", title = "Cluster") +
+tm_add_legend(type = "line", labels = "Bus Routes", col = "honeydew2") +
+tm_add_legend(type = "line", labels = "Subway Routes", col = "orange") +
+tm_layout(main.title = 
+            "Station Usage Profile Cluster \n- Origin Service 2015",
+          legend.outside = TRUE, legend.outside.position = "bottom",
+          legend.stack = "horizontal", legend.title.size = .5,
+          main.title.size = .8) +
+tm_compass(type = "4star", size = 1, show.labels = 0)
+tmap_save(p15_s, filename = "../vignettes/fig/clusters2015_s.png")
+
+p15_e <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(bus2) +
+  tm_lines(col = "honeydew2") +
+tm_shape(subway2) +
+  tm_lines(col = "orange") +
+tm_shape(c15_e) +
+  tm_dots(shape = 16, size = .15, col = "C", title = "Cluster") +
+tm_add_legend(type = "line", labels = "Bus Routes", col = "honeydew2") +
+tm_add_legend(type = "line", labels = "Subway Routes", col = "orange") +
+tm_layout(main.title = 
+            "Station Usage Profile Cluster \n- Destination Service 2015",
+          legend.outside = TRUE, legend.outside.position = "bottom",
+          legend.stack = "horizontal", legend.title.size = .5,
+          main.title.size = .8) +
+tm_compass(type = "4star", size = 1, show.labels = 0)
+tmap_save(p15_e, filename = "../vignettes/fig/clusters2015_e.png")
+
+p15_P <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(bus2) +
+  tm_lines(col = "honeydew2") +
+tm_shape(subway2) +
+  tm_lines(col = "orange") +
+tm_shape(c15_P) +
+  tm_dots(shape = 16, size = .15, col = "C", title = "Cluster") +
+tm_add_legend(type = "line", labels = "Bus Routes", col = "honeydew2") +
+tm_add_legend(type = "line", labels = "Subway Routes", col = "orange") +
+tm_layout(main.title = 
+            "Station Usage Profile Cluster \n- All Service 2015",
+          legend.outside = TRUE, legend.outside.position = "bottom",
+          legend.stack = "horizontal", legend.title.size = .5,
+          main.title.size = .8) +
+tm_compass(type = "4star", size = 1, show.labels = 0)
+tmap_save(p15_P, filename = "../vignettes/fig/clusters2015_P.png")
+
+p15 <- tmap_arrange(p15_s, p15_e, p15_P)
+tmap_save(p15, filename = "../vignettes/fig/clusters2015.png")
+
+# 2016
+#*************************************************************************
+p16_s <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(bus2) +
+  tm_lines(col = "honeydew2") +
+tm_shape(subway2) +
+  tm_lines(col = "orange") +
+tm_shape(c16_s) +
+  tm_dots(shape = 16, size = .15, col = "C", title = "Cluster") +
+tm_add_legend(type = "line", labels = "Bus Routes", col = "honeydew2") +
+tm_add_legend(type = "line", labels = "Subway Routes", col = "orange") +
+tm_layout(main.title = 
+            "Station Usage Profile Cluster \n- Origin Service 2016",
+          legend.outside = TRUE, legend.outside.position = "bottom",
+          legend.stack = "horizontal", legend.title.size = .5,
+          main.title.size = .8) +
+tm_compass(type = "4star", size = 1, show.labels = 0)
+tmap_save(p16_s, filename = "../vignettes/fig/clusters2016_s.png")
+
+p16_e <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(bus2) +
+  tm_lines(col = "honeydew2") +
+tm_shape(subway2) +
+  tm_lines(col = "orange") +
+tm_shape(c16_e) +
+  tm_dots(shape = 16, size = .15, col = "C", title = "Cluster") +
+tm_add_legend(type = "line", labels = "Bus Routes", col = "honeydew2") +
+tm_add_legend(type = "line", labels = "Subway Routes", col = "orange") +
+tm_layout(main.title = 
+            "Station Usage Profile Cluster \n- Destination Service 2016",
+          legend.outside = TRUE, legend.outside.position = "bottom",
+          legend.stack = "horizontal", legend.title.size = .5,
+          main.title.size = .8) +
+tm_compass(type = "4star", size = 1, show.labels = 0)
+tmap_save(p16_e, filename = "../vignettes/fig/clusters2016_e.png")
+
+p16_P <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(bus2) +
+  tm_lines(col = "honeydew2") +
+tm_shape(subway2) +
+  tm_lines(col = "orange") +
+tm_shape(c16_P) +
+  tm_dots(shape = 16, size = .15, col = "C", title = "Cluster") +
+tm_add_legend(type = "line", labels = "Bus Routes", col = "honeydew2") +
+tm_add_legend(type = "line", labels = "Subway Routes", col = "orange") +
+tm_layout(main.title = 
+            "Station Usage Profile Cluster \n- All Service 2016",
+          legend.outside = TRUE, legend.outside.position = "bottom",
+          legend.stack = "horizontal", legend.title.size = .5,
+          main.title.size = .8) +
+tm_compass(type = "4star", size = 1, show.labels = 0)
+tmap_save(p16_P, filename = "../vignettes/fig/clusters2016_P.png")
+
+p16 <- tmap_arrange(p16_s, p16_e, p16_P)
+tmap_save(p16, filename = "../vignettes/fig/clusters2016.png")
+
+# 2017
+#*****************************************************************************
+p17_s <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(bus2) +
+  tm_lines(col = "honeydew2") +
+tm_shape(subway2) +
+  tm_lines(col = "orange") +
+tm_shape(c17_s) +
+  tm_dots(shape = 16, size = .15, col = "C", title = "Cluster") +
+tm_add_legend(type = "line", labels = "Bus Routes", col = "honeydew2") +
+tm_add_legend(type = "line", labels = "Subway Routes", col = "orange") +
+tm_layout(main.title = 
+            "Station Usage Profile Cluster \n- Origin Service 2017",
+          legend.outside = TRUE, legend.outside.position = "bottom",
+          legend.stack = "horizontal", legend.title.size = .5,
+          main.title.size = .8) +
+tm_compass(type = "4star", size = 1, show.labels = 0)
+tmap_save(p17_s, filename = "../vignettes/fig/clusters2017_s.png")
+
+p17_e <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(bus2) +
+  tm_lines(col = "honeydew2") +
+tm_shape(subway2) +
+  tm_lines(col = "orange") +
+tm_shape(c17_e) +
+  tm_dots(shape = 16, size = .15, col = "C", title = "Cluster") +
+tm_add_legend(type = "line", labels = "Bus Routes", col = "honeydew2") +
+tm_add_legend(type = "line", labels = "Subway Routes", col = "orange") +
+tm_layout(main.title = 
+            "Station Usage Profile Cluster \n- Destination Service 2017",
+          legend.outside = TRUE, legend.outside.position = "bottom",
+          legend.stack = "horizontal", legend.title.size = .5,
+          main.title.size = .8) +
+tm_compass(type = "4star", size = 1, show.labels = 0)
+tmap_save(p17_e, filename = "../vignettes/fig/clusters2017_e.png")
+
+p17_P <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(bus2) +
+  tm_lines(col = "honeydew2") +
+tm_shape(subway2) +
+  tm_lines(col = "orange") +
+tm_shape(c17_P) +
+  tm_dots(shape = 16, size = .15, col = "C", title = "Cluster") +
+tm_add_legend(type = "line", labels = "Bus Routes", col = "honeydew2") +
+tm_add_legend(type = "line", labels = "Subway Routes", col = "orange") +
+tm_layout(main.title = 
+            "Station Usage Profile Cluster \n- All Service 2017",
+          legend.outside = TRUE, legend.outside.position = "bottom",
+          legend.stack = "horizontal", legend.title.size = .5,
+          main.title.size = .8) +
+tm_compass(type = "4star", size = 1, show.labels = 0)
+tmap_save(p17_P, filename = "../vignettes/fig/clusters2017_P.png")
+
+p17 <- tmap_arrange(p17_s, p17_e, p17_P)
+tmap_save(p17, filename = "../vignettes/fig/clusters2017.png")
+
+# 2018
+#******************************************************************************
+p18_s <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(bus2) +
+  tm_lines(col = "honeydew2") +
+tm_shape(subway2) +
+  tm_lines(col = "orange") +
+tm_shape(c18_s) +
+  tm_dots(shape = 16, size = .15, col = "C", title = "Cluster") +
+tm_add_legend(type = "line", labels = "Bus Routes", col = "honeydew2") +
+tm_add_legend(type = "line", labels = "Subway Routes", col = "orange") +
+tm_layout(main.title = 
+            "Station Usage Profile Cluster \n- Origin Service 2018",
+          legend.outside = TRUE, legend.outside.position = "bottom",
+          legend.stack = "horizontal", legend.title.size = .5,
+          main.title.size = .8) +
+tm_compass(type = "4star", size = 1, show.labels = 0)
+tmap_save(p18_s, filename = "../vignettes/fig/clusters2018_s.png")
+
+p18_e <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(bus2) +
+  tm_lines(col = "honeydew2") +
+tm_shape(subway2) +
+  tm_lines(col = "orange") +
+tm_shape(c18_e) +
+  tm_dots(shape = 16, size = .15, col = "C", title = "Cluster") +
+tm_add_legend(type = "line", labels = "Bus Routes", col = "honeydew2") +
+tm_add_legend(type = "line", labels = "Subway Routes", col = "orange") +
+tm_layout(main.title = 
+            "Station Usage Profile Cluster \n- Destination Service 2018",
+          legend.outside = TRUE, legend.outside.position = "bottom",
+          legend.stack = "horizontal", legend.title.size = .5,
+          main.title.size = .8) +
+tm_compass(type = "4star", size = 1, show.labels = 0)
+tmap_save(p18_e, filename = "../vignettes/fig/clusters2018_e.png")
+
+p18_P <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(bus2) +
+  tm_lines(col = "honeydew2") +
+tm_shape(subway2) +
+  tm_lines(col = "orange") +
+tm_shape(c18_P) +
+  tm_dots(shape = 16, size = .15, col = "C", title = "Cluster") +
+tm_add_legend(type = "line", labels = "Bus Routes", col = "honeydew2") +
+tm_add_legend(type = "line", labels = "Subway Routes", col = "orange") +
+tm_layout(main.title = 
+            "Station Usage Profile Cluster \n- Destination Service 2018",
+          legend.outside = TRUE, legend.outside.position = "bottom",
+          legend.stack = "horizontal", legend.title.size = .5,
+          main.title.size = .8) +
+tm_compass(type = "4star", size = 1, show.labels = 0)
+tmap_save(p18_P, filename = "../vignettes/fig/clusters2018_P.png")
+
+p18 <- tmap_arrange(p18_s, p18_e, p18_P)
+tmap_save(p18, filename = "../vignettes/fig/clusters2018.png")
+
+```
+
+
+
+```{r}
+#########################################################################
+#Daily data
+df15_june_start <- 
+  df15 %>% select(origin, tripcount, mdY, month, shour) %>%
+  filter(month == 6) %>% 
+  group_by(origin, mdY, shour) %>% 
+  summarise_all(funs(sum)) %>% 
+  select(origin, mdY, tripcount, shour) %>% 
+  rename(sid = origin, 
+         scount = tripcount) %>% 
+  arrange(sid)
+june15_station <- unique(df15_june_start$sid)
+
+df15_june_start_x <- sapply(june15_station, function(x) {
+  djune15_startx <- df15_june_start %>% filter(sid == x) %>% 
+    spread(shour, scount) #%>% select(-sduration)
+  
+  n <- names(djune15_startx)[names(djune15_startx) %in% c(0:24)]
+  names(djune15_startx)[names(djune15_startx) %in% c(0:24)] <- paste0("s", n)
+  
+  djune15_startx[is.na(djune15_startx)] <- ""
+  
+  rematrix <- subset(djune15_startx, select = -c(sid))
+  
+  rematrix <- rematrix %>% group_by(mdY) %>%
+  summarise_all(funs(trimws(paste(., collapse = ''))))
+  
+  cols.num <- paste0("s", n)
+  rematrix[cols.num] <- sapply(rematrix[cols.num], as.numeric)
+  rematrix[is.na(rematrix)] <- 0
+  
+  return(rematrix)
+})
+df15_june_start_x$`1`
+
+names(df15_june_start_x)
+ii = "1"
+df15_june_start_x["1"]
+
+t_june_start_x <- lapply(df15_june_start_x, function(x){
+  tempm <- x %>% as.data.frame()
+  for (i in paste0("s", 0:23)) {
+    if(!(i %in% names(tempm))){
+      tempm[ ,i] <- 0
+    }
+  }
+
+  
+  for (i in paste0("6/", 1:30, "/2015")) {
+    if(!(i %in% unique(tempm$mdY))){
+      tempm[nrow(tempm)+1, ] <- 0
+      tempm[nrow(tempm), 1] <- i
+    }
+  }
+  tempm <- tempm %>% arrange(mdY)
+  return(tempm)
+})
+t_june_start_x$`1`
+
+
+class(df15_june_start_x$`10`)
+length(df15_june_start_x)
+
+
+df15_june_start_y <- 
+  df15 %>% select(origin, tripcount, month) %>%
+  filter(month == 6) %>% select(-month) %>% 
+  group_by(origin) %>% 
+  summarise_all(funs(sum)) %>% 
+  rename(sid = origin, 
+         scount = tripcount) %>% 
+  arrange(sid) %>% 
+  mutate(alpha = scount / (30 * 24))
+
+start_x <- lapply(t_june_start_x, function(x) {
+  rematrix <- subset(x, select = -c(mdY))
+  return(rematrix)
+})
+
+# Matrix x1
+x1 <- rbind(as.vector(t(start_x[[1]])), as.vector(t(start_x[[2]])))
+for (i in 3:length(start_x)) {
+  x1 <- rbind(x1, as.vector(t(start_x[[i]])))
+}
+
+# as.matrix(sapply(start_x[[1]], as.numeric))
+# start_x[[1]]
+# my.array<-array(0,dim=c(2, 4, 6))
+
+
+
+# Array x1
+x1 <- array(NA ,dim = c(30, 24, length(start_x)))
+for (i in 1:length(start_x)) {
+  x1[, , i] <- as.matrix(sapply(start_x[[i]], as.numeric))
+}
+# x1[, , 34]
+
+y1 <- df15_june_start_y$alpha
+nrow(y1)
+
+pat_mix <- flexmix(y1 ~ x1, k = 3, model = FLXMRglm(family = "gaussian"))
+
+out <- poisregmixEM(y1, x1, verb = FALSE, maxit = 20000, epsilon = 0.1)
+
+library(mclust)
+fit <- Mclust(x1)
+par(mar = c(rep(0,4)))
+p <- plot(fit) # plot results 
+summary(fit) # display the best model
+fit$classification
+fit <- Mclust(y)
+
+# library(ClusterR)
+# gmm = GMM(x1, 3, "maha_dist", "random_subset", 10, 10)
+# gmm5 = GMM(x1, 5, "maha_dist", "random_subset", 10, 10)
+# gmm10 = GMM(x1, 5, "maha_dist", "random_subset", 10, 10)
+# 
+# y = rbind(c(1,1), c(0,2), c(3,3),
+#           c(1,0), c(2,0), c(3,3),
+#           c(0,1), c(2,2), c(3,0),
+#           c(1,1), c(2,0), c(3,3),
+#           c(1,1), c(0,2), c(0,3))
+# gmm = GMM(y, 2, "maha_dist", "random_subset", 10, 10)
+# gmm$Log_likelihood
+# gmm5$Log_likelihood
+# gmm$covariance_matrices
+
+# End Y
+df15_end <- 
+  df15 %>% select(destination, tripduration, tripcount, month) %>%
+  group_by(destination, month) %>% 
+  summarise_all(funs(sum, median)) %>% 
+  select(destination, tripcount_sum, tripduration_median, month) %>% 
+  rename(sid = destination, 
+         ecount = tripcount_sum, eduration = tripduration_median)
+df15_endx <- df15_end %>% spread(month, ecount) %>% rename(e1 = "1", e2 = "2",
+                                                e3 = "3", e4 = "4",
+                                                e5 = "5", e6 = "6",
+                                                e7 = "7", e8 = "8",
+                                                e9 = "9", e10 = "10",
+                                                e11 = "11", e12 = "12") %>% 
+  select(-eduration)
+df15_endx[is.na(df15_endx)] <- ""
+
+df15_endx <- df15_endx %>% group_by(sid) %>%
+  summarise_all(funs(trimws(paste(., collapse = ''))))
+cols.num <- paste0("e", 1:12)
+df15_endx[cols.num] <- sapply(df15_endx[cols.num], as.numeric)
+df15_endx[is.na(df15_endx)] <- 0
+
+df15_endy <- 
+  df15 %>% select(destination, tripduration, tripcount) %>%
+  group_by(destination) %>% 
+  summarise_all(funs(median, sum)) %>% 
+  rename(sid = destination, 
+         eduration = tripduration_median, ecount = tripcount_sum) %>% 
+  select(sid, eduration, ecount)
+
+df15_monthx <- full_join(df15_startx, df15_endx, by = "sid") %>%
+  arrange(sid)
+df15_monthy <- full_join(df15_starty, df15_endy, by = "sid") %>%
+  mutate(sumtrip = scount + ecount, meandur = (sduration + eduration)/2) %>%
+  arrange(sid)
+
+```
+
+
