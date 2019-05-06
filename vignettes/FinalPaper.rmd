@@ -1286,9 +1286,6 @@ tmap_save(p18_lc, filename = "../vignettes/fig/buffer_cluster_2018.png")
 ```
 
 
-
-
-
 # Results
 ## Bluebikes’ Trips Exploration - PJ
 Figures below show the number of usage per month from 2015 to 2018. We can find that the number of trips is increasing from January to July, and arriving the highest point at July or August, and then decreasing from August to December. In May, June, July and August, people are more likely to use bike sharing system. There is a obvious increasing of trips during 2018 compared with 2015 to 2017, which may be relevant to Blue Cross Blue Shield of Massachusetts’ sponsoring. Blue Cross Blue Shield of Massachusetts sponsored Metro Boston’s bike share system in March 2018, and the name was changed to Bluebikes. As of May 2017, the system had deployed 180 stations with a fleet of over 1,600 bikes, while it has more than 2,500 bikes and over 260 stations in 2018. Since more and more stations are launched, it’s more and more convenient to use Bluebikes. Therefore, more and more people choose to use Bluebikes.
@@ -1341,6 +1338,62 @@ Figures below are hot spot analysis results of 2017 and 2018. From the result of
 
 In conclusion, from 2015 to 2018, we can find that more and more hot spots appeared, and most of them concentrated at downtown Boston and Cambridge near Charles river. People are more likely to use Bluebikes as a way to colleges and as a way to touring, instead of as a method of transportation to work. 
 
+## Model Based Clustering - MZ
+Figures below are clusters extracted from three types of usage profiles in four years. Comparing across maps in the same year, the number of cluster in origin profile is always less, or at least equal to, that in destination profile, especially in 2015 and 2016, the first two years in our dataset. Less clusters mean less specific characteristics across the usage profile, in other words, the usage patterns of stations as origins are less varied than that of stations as destinations in 2015 and 2016. As the number of stations increasing, the area covered by the station system spreading, the variety of origin usage is increasing, which becomes more similar to that of destination usage.
+
+According to the table in 2.4.4 and the visualization of clusters, the two major clusters in all the usage profiles approximately covers the similar areas in Boston: one is spread from South End to Cambridge with Charles River as a centroid, and the other one seems like a surrounding ring of the first, usually covering north Dorchester, north Roxbury, and Charlestown. The characteristics these cluster would be examined via the statistic distribution of their usage profiles. 
+ 
+Station usage profile cluster in 2015:
+![](../vignettes/fig/clusters2015.png){width=98%}
+
+Station usage profile cluster in 2016:
+![](../vignettes/fig/clusters2016.png){width=98%}
+
+Station usage profile cluster in 2017:
+![](../vignettes/fig/clusters2017.png){width=98%}
+
+Station usage profile cluster in 2018:
+![](../vignettes/fig/clusters2018.png){width=98%}
+
+2015 all service first major cluster usage profile:
+
+![](../vignettes/fig/2015pro_P1.png){width=48%}
+![](../vignettes/fig/2015pro_Pd1.png){width=48%}
+
+2015 all service second major cluster usage profile:
+
+![](../vignettes/fig/2015pro_P2.png){width=48%}
+![](../vignettes/fig/2015pro_Pd2.png){width=48%}
+
+2016 all service first major cluster usage profile:
+
+![](../vignettes/fig/2016pro_P1.png){width=48%}
+![](../vignettes/fig/2016pro_Pd1.png){width=48%}
+
+2016 all service second major cluster usage profile:
+
+![](../vignettes/fig/2016pro_P2.png){width=48%}
+![](../vignettes/fig/2016pro_Pd2.png){width=48%}
+
+2017 all service first major cluster usage profile:
+
+![](../vignettes/fig/2017pro_P1.png){width=48%}
+![](../vignettes/fig/2017pro_Pd1.png){width=48%}
+
+2017 all service second major cluster usage profile:
+
+![](../vignettes/fig/2017pro_P2.png){width=48%}
+![](../vignettes/fig/2017pro_Pd2.png){width=48%}
+
+2018 all service first major cluster usage profile:
+
+![](../vignettes/fig/2018pro_P1.png){width=48%}
+![](../vignettes/fig/2018pro_Pd1.png){width=48%}
+
+2018 all service second major cluster usage profile:
+
+![](../vignettes/fig/2018pro_P2.png){width=48%}
+![](../vignettes/fig/2018pro_Pd2.png){width=48%}
 
 
 
