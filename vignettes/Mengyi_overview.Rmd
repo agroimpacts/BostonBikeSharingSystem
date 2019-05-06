@@ -217,23 +217,17 @@ trips15 <- Path15 %>%
        select(-c1, -c2)
    }) %>% set_names(names15)
 
+# The  start/end time of some 2016 data is different from the others
 names16 <- Path16 %>% basename() %>% substr(., start = 1, stop = 13)
 trips16 <- Path16 %>% 
    purrr::map(function(x) {
      read_csv(x) %>% 
        select("tripduration", "starttime",  "stoptime",
-              "start station id", "end station id", "year", "month") %>%
+              "start station id", "end station id", "year", "month") %>% 
        rename(origin = "start station id", destination = "end station id") %>% 
        mutate(origin = as.character(origin), 
-              destination = as.character(destination)) %>% 
-       mutate(c1 = as.character(starttime)) %>%
-       mutate(c2 = as.character(stoptime)) %>%
-       mutate(mdY = sub("\\s+.*", "", c1)) %>% 
-       mutate(weekday = as.Date(mdY, "%m/%d/%Y") %>% weekdays()) %>% 
-       mutate(shour = sub(":+.*", "", sub("*.+\\s", "", c1))) %>% 
-       mutate(ehour = sub(":+.*", "", sub("*.+\\s", "", c2))) %>% 
-       mutate(tripcount = 1) %>% 
-       select(-c1, -c2)
+              destination = as.character(destination)) %>%
+       mutate(tripcount = 1)
    }) %>% set_names(names16)
 
 names17 <- Path17 %>% basename() %>% substr(., start = 1, stop = 13)
@@ -714,6 +708,629 @@ df18_P <- df18_P %>% mutate(C = fit18_3$classification)
 ```
 
 
+```{r}
+### Cluster Analysis
+############################################################################
+summary(fit15_1)
+summary(fit15_2)
+summary(fit15_3)
+
+summary(fit16_1)
+summary(fit16_2)
+summary(fit16_3)
+
+nrow(df18_P)
+
+summary(fit18_1)
+summary(fit18_2)
+summary(fit18_3)
+
+### Profile Plot
+# 2015
+# Generate data to draw trip profile
+usage <- c(rep("Origins", 12), rep("Destinations", 12))
+mth <- c(1:12, 1:12)
+
+sumdf15_P1 <- colSums(df15_P %>% 
+                       filter(C == "1") %>% 
+                       select(-sid, -C, -sduration, -eduration))
+pro15_P1 <- data.frame(trips = (sumdf15_P1 / nrow(df15_P)), 
+                       Usage = usage, Month = mth)
+
+sumdf15_P2 <- colSums(df15_P %>% 
+                       filter(C == "2") %>% 
+                       select(-sid, -C, -sduration, -eduration))
+pro15_P2 <- data.frame(trips = (sumdf15_P2 / nrow(df15_P)), 
+                       Usage = usage, Month = mth)
+
+# Generate data for duration profile
+ddf15_P1 <- df15_P %>% filter(C == "1")
+dusage <- c(rep("Origins", nrow(ddf15_P1)), 
+            rep("Destinations", nrow(ddf15_P1)))
+pro15_Pd1 <- 
+  data.frame(Duration = c((ddf15_P1$sduration / 60), (ddf15_P1$eduration / 60)),
+             Usage = dusage)
+
+ddf15_P2 <- df15_P %>% filter(C == "2")
+dusage <- c(rep("Origins", nrow(ddf15_P2)), 
+            rep("Destinations", nrow(ddf15_P2)))
+pro15_Pd2 <- 
+  data.frame(Duration = c((ddf15_P2$sduration / 60), (ddf15_P2$eduration / 60)),
+             Usage = dusage)
+
+p15_proP1 <- pro15_P1 %>% 
+  ggplot(., aes(x = factor(Month), y = trips, 
+                fill = Usage), bins = 15) +
+  geom_bar(stat = "identity") +
+  ylim(0, 1500) +
+  ylab("The average number of trips") +
+  xlab("Month") +
+  labs(title = "2015 All Service Cluster 1 Usage Profile",
+       subtitle = "Average number of trips by month")
+ggsave("2015pro_P1.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+p15_proP2 <- pro15_P2 %>% 
+  ggplot(., aes(x = factor(Month), y = trips, 
+                fill = Usage), bins = 15) +
+  geom_bar(stat = "identity") +
+  ylim(0, 1500) +
+  ylab("The average number of trips") +
+  xlab("Month") +
+  labs(title = "2015 All Service Cluster 2 Usage Profile",
+       subtitle = "Average number of trips by month")
+ggsave("2015pro_P2.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+p15_proPd1 <- pro15_Pd1 %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Duration, fill = Usage), bins = 15, 
+                 position = "dodge", col = "black") +
+  xlim(0, 30) +
+  labs(title = "2015 All Service Cluster 1 Usage Profile",
+       subtitle = "Trip duration distribution")
+ggsave("2015pro_Pd1.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+p15_proPd2 <- pro15_Pd2 %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Duration, fill = Usage), bins = 15, 
+                 position = "dodge", col = "black") +
+  xlim(0, 30) +
+  labs(title = "2015 All Service Cluster 2 Usage Profile",
+       subtitle = "Trip duration distribution")
+ggsave("2015pro_Pd2.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+#****************************************************************************
+
+# 2016
+# Generate data to draw trip profile
+usage <- c(rep("Origins", 12), rep("Destinations", 12))
+mth <- c(1:12, 1:12)
+sumdf16_P1 <- colSums(df16_P %>% 
+                       filter(C == "2") %>% 
+                       select(-sid, -C, -sduration, -eduration))
+pro16_P1 <- data.frame(trips = (sumdf16_P1 / nrow(df16_P)), 
+                       Usage = usage, Month = mth)
+
+sumdf16_P2 <- colSums(df16_P %>% 
+                       filter(C == "3") %>% 
+                       select(-sid, -C, -sduration, -eduration))
+pro16_P2 <- data.frame(trips = (sumdf16_P2 / nrow(df16_P)), 
+                       Usage = usage, Month = mth)
+
+# Generate data for duration profile
+ddf16_P1 <- df16_P %>% filter(C == "2")
+dusage <- c(rep("Origins", nrow(ddf16_P1)), 
+            rep("Destinations", nrow(ddf16_P1)))
+pro16_Pd1 <- 
+  data.frame(Duration = c((ddf16_P1$sduration / 60), (ddf16_P1$eduration / 60)),
+             Usage = dusage)
+
+ddf16_P2 <- df16_P %>% filter(C == "3")
+dusage <- c(rep("Origins", nrow(ddf16_P2)), 
+            rep("Destinations", nrow(ddf16_P2)))
+pro16_Pd2 <- 
+  data.frame(Duration = c((ddf16_P2$sduration / 60), (ddf16_P2$eduration / 60)),
+             Usage = dusage)
+
+p16_proP1 <- pro16_P1 %>% 
+  ggplot(., aes(x = factor(Month), y = trips, 
+                fill = Usage), bins = 15) +
+  geom_bar(stat = "identity") +
+  ylim(0, 1500) +
+  ylab("The average number of trips") +
+  xlab("Month") +
+  labs(title = "2016 All Service Cluster 2 Usage Profile",
+       subtitle = "Average number of trips by month")
+ggsave("2016pro_P1.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+p16_proP2 <- pro16_P2 %>% 
+  ggplot(., aes(x = factor(Month), y = trips, 
+                fill = Usage), bins = 15) +
+  geom_bar(stat = "identity") +
+  ylim(0, 1500) +
+  ylab("The average number of trips") +
+  xlab("Month") +
+  labs(title = "2016 All Service Cluster 3 Usage Profile",
+       subtitle = "Average number of trips by month")
+ggsave("2016pro_P2.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+p16_proPd1 <- pro16_Pd1 %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Duration, fill = Usage), bins = 15, 
+                 position = "dodge", col = "black") +
+  xlim(0, 30) +
+  labs(title = "2016 All Service Cluster 2 Usage Profile",
+       subtitle = "Trip duration distribution")
+ggsave("2016pro_Pd1.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+p16_proPd2 <- pro16_Pd2 %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Duration, fill = Usage), bins = 15, 
+                 position = "dodge", col = "black") +
+  xlim(0, 30) +
+  labs(title = "2016 All Service Cluster 3 Usage Profile",
+       subtitle = "Trip duration distribution")
+ggsave("2016pro_Pd2.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+#*****************************************************************************
+
+# 2017
+# Generate data to draw trip profile
+usage <- c(rep("Origins", 12), rep("Destinations", 12))
+mth <- c(1:12, 1:12)
+
+sumdf17_P1 <- colSums(df17_P %>% 
+                       filter(C == "1") %>% 
+                       select(-sid, -C, -sduration, -eduration))
+pro17_P1 <- data.frame(trips = (sumdf17_P1 / nrow(df17_P)), 
+                       Usage = usage, Month = mth)
+
+sumdf17_P2 <- colSums(df17_P %>% 
+                       filter(C == "2") %>% 
+                       select(-sid, -C, -sduration, -eduration))
+pro17_P2 <- data.frame(trips = (sumdf17_P2 / nrow(df17_P)), 
+                       Usage = usage, Month = mth)
+
+# Generate data for duration profile
+ddf17_P1 <- df17_P %>% filter(C == "1")
+dusage <- c(rep("Origins", nrow(ddf17_P1)), 
+            rep("Destinations", nrow(ddf17_P1)))
+pro17_Pd1 <- 
+  data.frame(Duration = c((ddf17_P1$sduration / 60), (ddf17_P1$eduration / 60)),
+             Usage = dusage)
+
+ddf17_P2 <- df17_P %>% filter(C == "2")
+dusage <- c(rep("Origins", nrow(ddf17_P2)), 
+            rep("Destinations", nrow(ddf17_P2)))
+pro17_Pd2 <- 
+  data.frame(Duration = c((ddf17_P2$sduration / 60), (ddf17_P2$eduration / 60)),
+             Usage = dusage)
+
+p17_proP1 <- pro17_P1 %>% 
+  ggplot(., aes(x = factor(Month), y = trips, 
+                fill = Usage), bins = 15) +
+  geom_bar(stat = "identity") +
+  ylim(0, 1500) +
+  ylab("The average number of trips") +
+  xlab("Month") +
+  labs(title = "2017 All Service Cluster 1 Usage Profile",
+       subtitle = "Average number of trips by month")
+ggsave("2017pro_P1.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+p17_proP2 <- pro17_P2 %>% 
+  ggplot(., aes(x = factor(Month), y = trips, 
+                fill = Usage), bins = 15) +
+  geom_bar(stat = "identity") +
+  ylim(0, 1500) +
+  ylab("The average number of trips") +
+  xlab("Month") +
+  labs(title = "2017 All Service Cluster 2 Usage Profile",
+       subtitle = "Average number of trips by month")
+ggsave("2017pro_P2.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+p17_proPd1 <- pro17_Pd1 %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Duration, fill = Usage), bins = 15, 
+                 position = "dodge", col = "black") +
+  xlim(0, 35) +
+  labs(title = "2017 All Service Cluster 1 Usage Profile",
+       subtitle = "Trip duration distribution")
+ggsave("2017pro_Pd1.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+p17_proPd2 <- pro17_Pd2 %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Duration, fill = Usage), bins = 15, 
+                 position = "dodge", col = "black") +
+  xlim(0, 35) +
+  labs(title = "2017 All Service Cluster 2 Usage Profile",
+       subtitle = "Trip duration distribution")
+ggsave("2017pro_Pd2.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+#****************************************************************************
+
+# 2018
+# Generate data to draw trip profile
+usage <- c(rep("Origins", 12), rep("Destinations", 12))
+mth <- c(1:12, 1:12)
+sumdf18_P1 <- colSums(df18_P %>% 
+                       filter(C == "2") %>% 
+                       select(-sid, -C, -sduration, -eduration))
+pro18_P1 <- data.frame(trips = (sumdf18_P1 / nrow(df18_P)), 
+                       Usage = usage, Month = mth)
+
+sumdf18_P2 <- colSums(df18_P %>% 
+                       filter(C == "1") %>% 
+                       select(-sid, -C, -sduration, -eduration))
+pro18_P2 <- data.frame(trips = (sumdf18_P2 / nrow(df18_P)), 
+                       Usage = usage, Month = mth)
+
+# Generate data for duration profile
+ddf18_P1 <- df18_P %>% filter(C == "2")
+dusage <- c(rep("Origins", nrow(ddf18_P1)), 
+            rep("Destinations", nrow(ddf18_P1)))
+pro18_Pd1 <- 
+  data.frame(Duration = c((ddf18_P1$sduration / 60), (ddf18_P1$eduration / 60)),
+             Usage = dusage)
+
+ddf18_P2 <- df18_P %>% filter(C == "1")
+dusage <- c(rep("Origins", nrow(ddf18_P2)), 
+            rep("Destinations", nrow(ddf18_P2)))
+pro18_Pd2 <- 
+  data.frame(Duration = c((ddf18_P2$sduration / 60), (ddf18_P2$eduration / 60)),
+             Usage = dusage)
+
+p18_proP1 <- pro18_P1 %>% 
+  ggplot(., aes(x = factor(Month), y = trips, 
+                fill = Usage), bins = 15) +
+  geom_bar(stat = "identity") +
+  ylim(0, 1500) +
+  ylab("The average number of trips") +
+  xlab("Month") +
+  labs(title = "2018 All Service Cluster 2 Usage Profile",
+       subtitle = "Average number of trips by month") 
+ggsave("2018pro_P1.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+p18_proP2 <- pro18_P2 %>% 
+  ggplot(., aes(x = factor(Month), y = trips, 
+                fill = Usage), bins = 15) +
+  geom_bar(stat = "identity") +
+  ylim(0, 1500) +
+  ylab("The average number of trips") +
+  xlab("Month") +
+  labs(title = "2018 All Service Cluster 1 Usage Profile",
+       subtitle = "Average number of trips by month")
+ggsave("2018pro_P2.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+p18_proPd1 <- pro18_Pd1 %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Duration, fill = Usage), bins = 15, 
+                 position = "dodge", col = "black") +
+  xlim(0, 50) +
+  labs(title = "2018 All Service Cluster 2 Usage Profile",
+       subtitle = "Trip duration distribution")
+ggsave("2018pro_Pd1.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+p18_proPd2 <- pro18_Pd2 %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Duration, fill = Usage), bins = 15, 
+                 position = "dodge", col = "black") +
+  xlim(0, 50) +
+  labs(title = "2018 All Service Cluster 1 Usage Profile",
+       subtitle = "Trip duration distribution")
+ggsave("2018pro_Pd2.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+#*****************************************************************************
+
+### Largeest Origin/Destination Cluster
+# 2015 Origin
+# Generate data for average trip profile
+lmth <- c(1:12)
+df15_ls <- colSums(df15_startP %>% 
+                       filter(C == "2") %>% 
+                       select(-sid, -C, -sduration))
+pro15_ls <- data.frame(trips = (df15_ls / nrow(df15_startP)), Month = lmth)
+
+# Generate data for duration profile
+ddf15_ls <- df15_startP %>% filter(C == "2")
+
+pro15_lsd <- 
+  data.frame(Duration = (ddf15_ls$sduration / 60))
+
+# Draw plots
+p15_prols <- pro15_ls %>% 
+  ggplot(., aes(x = factor(Month), y = trips), bins = 15) +
+  geom_bar(stat = "identity") +
+  ylim(0, 300) +
+  ylab("The average number of trips") +
+  xlab("Month") +
+  labs(title = "2015 Origin Service Largest Cluster Usage Profile",
+       subtitle = "Average number of trips by month") 
+ggsave("2015pro_ls.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+
+p15_prolsd <- pro15_lsd %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Duration), bins = 15, 
+                 position = "dodge", col = "white") +
+  xlim(0, 30) +
+  labs(title = "2015 Origin Service Largest Cluster Usage Profile",
+       subtitle = "Trip duration distribution")
+ggsave("2015pro_lsd.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+#******************************************************************************
+
+# 2015 Destination
+# Generate data for average trip profile
+lmth <- c(1:12)
+df15_le <- colSums(df15_endP %>% 
+                       filter(C == "2") %>% 
+                       select(-sid, -C, -eduration))
+pro15_le <- data.frame(trips = (df15_le / nrow(df15_endP)), Month = lmth)
+
+# Generate data for duration profile
+ddf15_le <- df15_endP %>% filter(C == "2")
+
+pro15_led <- 
+  data.frame(Duration = (ddf15_le$eduration / 60))
+
+# Draw plots
+p15_prole <- pro15_le %>% 
+  ggplot(., aes(x = factor(Month), y = trips), bins = 15) +
+  geom_bar(stat = "identity") +
+  ylim(0, 300) +
+  ylab("The average number of trips") +
+  xlab("Month") +
+  labs(title = "2015 Destination Service Largest Cluster Usage Profile",
+       subtitle = "Average number of trips by month") 
+ggsave("2015pro_le.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+
+p15_proled <- pro15_led %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Duration), bins = 15, 
+                 position = "dodge", col = "white") +
+  xlim(0, 30) +
+  labs(title = "2015 Destination Service Largest Cluster Usage Profile",
+       subtitle = "Trip duration distribution")
+ggsave("2015pro_led.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+#******************************************************************************
+
+# 2018 Origin
+# Generate data for average trip profile
+lmth <- c(1:12)
+df18_ls <- colSums(df18_startP %>% 
+                       filter(C == "2") %>% 
+                       select(-sid, -C, -sduration))
+pro18_ls <- data.frame(trips = (df18_ls / nrow(df18_startP)), Month = lmth)
+
+# Generate data for duration profile
+ddf18_ls <- df18_startP %>% filter(C == "2")
+
+pro18_lsd <- 
+  data.frame(Duration = (ddf18_ls$sduration / 60))
+
+# Draw plots
+p18_prols <- pro18_ls %>% 
+  ggplot(., aes(x = factor(Month), y = trips), bins = 15) +
+  geom_bar(stat = "identity") +
+  ylim(0, 200) +
+  ylab("The average number of trips") +
+  xlab("Month") +
+  labs(title = "2018 Origin Service Largest Cluster Usage Profile",
+       subtitle = "Average number of trips by month") 
+ggsave("2018pro_ls.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+
+p18_prolsd <- pro18_lsd %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Duration), bins = 15, 
+                 position = "dodge", col = "white") +
+  xlim(0, 55) +
+  labs(title = "2018 Origin Service Largest Cluster Usage Profile",
+       subtitle = "Trip duration distribution")
+ggsave("2018pro_lsd.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+#******************************************************************************
+
+# 2018 Destination
+# Generate data for average trip profile
+lmth <- c(1:12)
+df18_le <- colSums(df18_endP %>% 
+                       filter(C == "2") %>% 
+                       select(-sid, -C, -eduration))
+pro18_le <- data.frame(trips = (df18_le / nrow(df18_endP)), Month = lmth)
+
+# Generate data for duration profile
+ddf18_le <- df18_endP %>% filter(C == "2")
+
+pro18_led <- 
+  data.frame(Duration = (ddf18_le$eduration / 60))
+
+# Draw plots
+p18_prole <- pro18_le %>% 
+  ggplot(., aes(x = factor(Month), y = trips), bins = 15) +
+  geom_bar(stat = "identity") +
+  ylim(0, 200) +
+  ylab("The average number of trips") +
+  xlab("Month") +
+  labs(title = "2018 Destination Service Largest Cluster Usage Profile",
+       subtitle = "Average number of trips by month") 
+ggsave("2018pro_le.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+
+p18_proled <- pro18_led %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Duration), bins = 15, 
+                 position = "dodge", col = "white") +
+  xlim(0, 55) +
+  labs(title = "2018 Destination Service Largest Cluster Usage Profile",
+       subtitle = "Trip duration distribution")
+ggsave("2018pro_led.png", path = "../vignettes/fig", dpi = 120,
+       width = 8, height = 8, units = "in")
+
+
+#******************************************************************************
+```
+
+```{r, waring=FALSE, message=FALSE, fig.align = "center"}
+#*****************************************************************************
+### Largest origin/destination cluster analysis
+# Create buffer area
+bus2 <- st_zm(bus)
+subway2 <- st_zm(subway)
+
+b_college <- lapply(c(200, 500, 1000), function(x){
+  buffer <- colleges %>% select(COLLEGE) %>% 
+    st_buffer(dist = x) %>% st_union()
+  return(buffer)
+})
+
+b_bus <- bus2 %>%
+  st_buffer(dist = 50) %>% st_union()
+
+b_subway <- subway2 %>%
+  st_buffer(dist = 100) %>% st_union()
+
+buffer <- list(b_college[[1]],  b_college[[2]], b_college[[3]],
+               b_bus, b_subway)
+
+# 2015 Analysis
+c15_ls <- c15_s %>% filter(C == "2")
+c15_le <- c15_e %>% filter(C == "4")
+
+bc_c15_ls <- sapply(buffer, function(x) {
+  s <- st_contains(x, c15_ls)
+  c <- length(s[[1]])
+  return(c)
+})
+bc_c15_le <- sapply(buffer, function(x) {
+  s <- st_contains(x, c15_le)
+  c <- length(s[[1]])
+  return(c)
+})
+
+# 2018 Analysis
+c18_ls <- c18_s %>% filter(C == "2")
+c18_le <- c18_e %>% filter(C == "4")
+
+bc_c18_ls <- sapply(buffer, function(x) {
+  s <- st_contains(x, c18_ls)
+  c <- length(s[[1]])
+  return(c)
+})
+bc_c18_le <- sapply(buffer, function(x) {
+  s <- st_contains(x, c18_le)
+  c <- length(s[[1]])
+  return(c)
+})
+
+bc1518 <- rbind(bc_c15_ls, bc_c15_le, bc_c18_ls, bc_c18_le)
+
+
+
+# Plot clusters
+tmap_mode("plot")
+
+# 2015 origin/destination largest cluster + buffer
+p15_lc <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(b_college[[3]]) +
+  tm_polygons(col = "darkseagreen2") +
+tm_shape(b_college[[2]]) +
+  tm_polygons(col = "darkseagreen3") +
+tm_shape(b_college[[1]]) +
+  tm_polygons(col = "darkseagreen4") +
+tm_shape(b_bus) +
+  tm_polygons(col = "seashell") +
+tm_shape(b_subway) +
+  tm_polygons(col = "khaki1") +
+tm_shape(c15_ls) +
+  tm_dots(shape = 3, size = .15, col = "red") +
+tm_shape(c15_le) +
+  tm_dots(shape = 4, size = .15, col = "blue") +
+tm_add_legend(type = "symbol", shape = 3,
+              labels = "Stations in Origin Cluster", col = "red") +
+tm_add_legend(type = "symbol", shape = 4,
+              labels = "Stations in Origin Cluster", col = "blue") +
+tm_add_legend(type = "fill", col = "darkseagreen2",
+              labels = "Distance to College < = 1000 m") +
+tm_add_legend(type = "fill", col = "darkseagreen3",
+              labels = "Distance to College < = 500 m") +
+tm_add_legend(type = "fill", col = "darkseagreen4",
+              labels = "Distance to College < = 200 m") +
+tm_add_legend(type = "fill", col = "seashell",
+              labels = "Distance to Bus Route < = 50 m") +
+tm_add_legend(type = "fill", col = "khaki1",
+              labels = "Distance to Subway Route < = 100 m") +  
+tm_layout(main.title = 
+            "Two Largest Clusters by Usage 2015 \n and Buffer Area",
+          legend.outside = TRUE, legend.outside.position = "right",
+          legend.stack = "vertical") +
+tm_compass(type = "4star", size = 2, show.labels = 0)
+tmap_save(p15_lc, filename = "../vignettes/fig/buffer_cluster_2015.png")
+
+# 2018 origin/destination largest cluster + buffer
+p18_lc <- tm_shape(censusshp$poprace %>% st_union) +
+  tm_polygons(col = "grey") +
+tm_shape(b_college[[3]]) +
+  tm_polygons(col = "darkseagreen2") +
+tm_shape(b_college[[2]]) +
+  tm_polygons(col = "darkseagreen3") +
+tm_shape(b_college[[1]]) +
+  tm_polygons(col = "darkseagreen4") +
+tm_shape(b_bus) +
+  tm_polygons(col = "seashell") +
+tm_shape(b_subway) +
+  tm_polygons(col = "khaki1") +
+tm_shape(c18_ls) +
+  tm_dots(shape = 3, size = .15, col = "red") +
+tm_shape(c18_le) +
+  tm_dots(shape = 4, size = .15, col = "blue") +
+tm_add_legend(type = "symbol", shape = 3,
+              labels = "Stations in Origin Cluster", col = "red") +
+tm_add_legend(type = "symbol", shape = 4,
+              labels = "Stations in Origin Cluster", col = "blue") +
+tm_add_legend(type = "fill", col = "darkseagreen2",
+              labels = "Distance to College < = 1000 m") +
+tm_add_legend(type = "fill", col = "darkseagreen3",
+              labels = "Distance to College < = 500 m") +
+tm_add_legend(type = "fill", col = "darkseagreen4",
+              labels = "Distance to College < = 200 m") +
+tm_add_legend(type = "fill", col = "seashell",
+              labels = "Distance to Bus Route < = 50 m") +
+tm_add_legend(type = "fill", col = "khaki1",
+              labels = "Distance to Subway Route < = 100 m") +  
+tm_layout(main.title = 
+            "Two Largest Clusters by Usage 2018 \n and Buffer Area",
+          legend.outside = TRUE, legend.outside.position = "right",
+          legend.stack = "vertical") +
+tm_compass(type = "4star", size = 2, show.labels = 0)
+tmap_save(p18_lc, filename = "../vignettes/fig/buffer_cluster_2018.png")
+
+
+```
+
+
+
 ```{r, waring=FALSE, message=FALSE, fig.align = "center"}
 library(tmap)
 library(tmaptools)
@@ -851,11 +1468,6 @@ c18_P <-c18_P %>%
   st_as_sf(., coords = c("lon", "lat"), crs = 4326) %>%
   st_transform(x = ., crs = st_crs(sa))
 
-bstation <- dir(bikePath, pattern = "Hubway_Stations_as_of_July_2017.csv", 
-                full.names = TRUE) %>% read_csv() %>% 
-  st_as_sf(., coords = c("Longitude", "Latitude"), crs = 4326) %>% 
-  st_transform(x = ., crs = st_crs(sa))
-
 bus2 <- st_zm(bus)
 subway2 <- st_zm(subway)
 # Plot clusters
@@ -919,6 +1531,7 @@ tmap_save(p15_P, filename = "../vignettes/fig/clusters2015_P.png")
 
 p15 <- tmap_arrange(p15_s, p15_e, p15_P)
 tmap_save(p15, filename = "../vignettes/fig/clusters2015.png")
+
 
 # 2016
 #*************************************************************************
