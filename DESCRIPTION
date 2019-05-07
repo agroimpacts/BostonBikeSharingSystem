@@ -1,7 +1,8 @@
 Package: BostonBikeSharingSystem
 Title: Boston Bike Sharing System Analysis
 Version: 0.1.0
-Authors@R: Mengyi Zhang and Piaotian Jin
+Author: Mengyi Zhang and Piaotian Jin
+Maintainer: Mengyi Zhang <monica.z.fe@gmail.com>, Piaotian Jin <piaoapiaotian@gmail.com>
 Description: Package for Piaotian Jin and Mengyi Zhang's R Final Project
 Depends: R (>= 3.5.1)
 License: What license is it under?
