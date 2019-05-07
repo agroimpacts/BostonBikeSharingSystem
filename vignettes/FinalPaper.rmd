@@ -546,15 +546,13 @@ For Gaussian mixture model based clustering, we designed three types of usage pr
 
 3) all usage profile: a data frame created by join the two profile data frames described in 1) and 2) by station ID (sid), containing independent columns of origin or destination usage (column names: s1, s2, …, s12, e1, e2, …, e12) and two columns of median trip duration when each station serves as origins or destinations respectively (column names: sduration, eduration).
 
-The three types of usage profiles can be generated from the dataset of trip records from 2015 to 2018. First, we read in the trip records of each year into an independent list where records for each month stored in data frame. Then we use `rbind()` to combine monthly datasets into an annual data frame. The code for this step is attached below. `na.omit()` is used to remove rows with missing records.
+The three types of usage profiles can be generated from the dataset of trip records from 2015 to 2018. First, we read in the trip records of each year into an independent list where records for each month stored in data frame. Then we use `rbind()` to combine monthly datasets into an annual data frame. `na.omit()` is used to remove rows with missing records. 
+
+The code for this step is attached below. The code for 2015 dataset is shown as example, those for 2016, 2017 and 2018 are omitted for conciseness. If intereseted, please check "Model Based Clustering" vignette for reference.
+
 ```{r, eval = FALSE}
+# file path
 Path15 <- dir("D:/R_final/BikeSharing_project/BlueBike/2015", 
-                  pattern = ".csv", full.names = TRUE)
-Path16 <- dir("D:/R_final/BikeSharing_project/BlueBike/2016", 
-                  pattern = ".csv", full.names = TRUE)
-Path17 <- dir("D:/R_final/BikeSharing_project/BlueBike/2017", 
-                  pattern = ".csv", full.names = TRUE)
-Path18 <- dir("D:/R_final/BikeSharing_project/BlueBike/2018", 
                   pattern = ".csv", full.names = TRUE)
 
 # Read in trip data
@@ -577,56 +575,8 @@ trips15 <- Path15 %>%
        select(-c1, -c2)
    }) %>% set_names(names15)
 
-# The  start/end time of some 2016 data is different from the others
-names16 <- Path16 %>% basename() %>% substr(., start = 1, stop = 13)
-trips16 <- Path16 %>% 
-   purrr::map(function(x) {
-     read_csv(x) %>% 
-       select("tripduration", "starttime",  "stoptime",
-              "start station id", "end station id", "year", "month") %>% 
-       rename(origin = "start station id", destination = "end station id") %>% 
-       mutate(origin = as.character(origin), 
-              destination = as.character(destination)) %>%
-       mutate(tripcount = 1)
-   }) %>% set_names(names16)
-
-names17 <- Path17 %>% basename() %>% substr(., start = 1, stop = 13)
-trips17 <- Path17 %>% 
-   purrr::map(function(x) {
-     read_csv(x) %>% 
-       select("tripduration", "starttime",  "stoptime",
-              "start station id", "end station id", "year", "month") %>%
-       rename(origin = "start station id", destination = "end station id") %>% 
-       mutate(origin = as.character(origin), 
-              destination = as.character(destination)) %>% 
-       mutate(c1 = as.character(starttime)) %>%
-       mutate(c2 = as.character(stoptime)) %>%
-       mutate(mdY = sub("\\s+.*", "", c1)) %>% 
-       mutate(weekday = as.Date(mdY, "%m/%d/%Y") %>% weekdays()) %>% 
-       mutate(shour = sub(":+.*", "", sub("*.+\\s", "", c1))) %>% 
-       mutate(ehour = sub(":+.*", "", sub("*.+\\s", "", c2))) %>% 
-       mutate(tripcount = 1) %>% 
-       select(-c1, -c2)
-   }) %>% set_names(names17)
-
-# The sheet name and start/end time of 2018 is different from the others
-names18 <- Path18 %>% basename() %>% substr(., start = 1, stop = 13)
-trips18 <- Path18 %>% 
-   purrr::map(function(x) {
-     read_csv(x) %>% 
-       select("tripduration", "starttime",  "stoptime",
-              "start station id", "end station id", "year", "month") %>% 
-       rename(origin = "start station id", destination = "end station id") %>% 
-       mutate(origin = as.character(origin), 
-              destination = as.character(destination)) %>%
-       mutate(tripcount = 1)
-   }) %>% set_names(names18)
-
 # Combine monthly datasets into annual data frames
 df15 <- do.call("rbind", trips15) %>% na.omit()
-df16 <- do.call("rbind", trips16) %>% na.omit()
-df17 <- do.call("rbind", trips17) %>% na.omit()
-df18 <- do.call("rbind", trips18) %>% na.omit()
 ```
 
 Three usage profiles of 2015 are created from the annual data frame just created. The code to create three usage profiles of 2015 is attached below. The code to create profile of 2016, 2017 and 2018 is almost identical to this one, therefore it is not shown in this vignette for conciseness. If interested, please use “Model Based Clustering” vignette for reference. 
@@ -722,6 +672,7 @@ df15_P[is.na(df15_P)] <- 0
 
 ### Buffer Preperation - MZ
 Public transportation route and the location of colleges could be factors indicating the characteristics of neighborhoods and affecting the usage of Bluebikes. Varied buffer areas are created to explore the spatial relationship between them and stations in interested clusters, and they are: 1) 200-meter, 500-meter and 1000-meter buffers from colleges, 2) a 50-meter buffer from bus routes, 3) a 100-meter buffer from subway routes. The code to read in shape files and create buffers from them is attached below. ` st_zm()` is used to transform the original data as GEOS does not support 3-dimensional geometries.
+
 ```{r, eval = FALSE}
 # Read shape files
 dataPath <- "D:/R_final/BikeSharing_project/BostonBikeSharingSystem/Data/SocDem"
