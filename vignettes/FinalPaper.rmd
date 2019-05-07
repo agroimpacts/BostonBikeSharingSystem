@@ -43,7 +43,7 @@ This project aims to explore the usage patterns of Boston’s bike sharing syste
 
 4. Use Gaussian mixture model to process stations trip count data, extract station clusters based on EM algorithm, and comparing major clusters with buffer area of neighboring public transportation routes and colleges to find out latent factors contributing to the use of bike sharing system.
 
-5. Summarize the usage profile of Bluebikes system and explore if there are any potential areas to promote new bike stations or more bikes.
+5. Summarize the usage profile of Bluebikes system and explore if there are any improvment suggestions on the system.
 
 
 
@@ -529,10 +529,22 @@ summarytable2015 %>%
 ```
 
 ## Model Based Clustering (Gaussian mixture model)
-In this section, our goals are: 1) to extract station clusters based on the annually usage profile at the scale of monthly data; 2) to analyze and summarize the characteristics of major clusters, and further understand the performance Bluebikes system by comparing major clusters throughout the four years; 3) to join interested clusters with buffer area of public transportation routes and colleges, and find out potential factors determining their usage characteristics.
+In this section, our goals are: 
+
+1) to extract station clusters based on the annually usage profile at the scale of monthly data; 
+
+2) to analyze and summarize the characteristics of major clusters, and further understand the performance Bluebikes system by comparing major clusters throughout the four years; 
+
+3) to join interested clusters with buffer area of public transportation routes and colleges, and find out potential factors determining their usage characteristics.
 
 ### Monthly Station Usage Profile Preperation - MZ
-For Gaussian mixture model based clustering, we designed three types of usage profiles for each year: 1) origin usage profile: a data frame organized by station ID (column name: sid), containing multiple columns of monthly total of trips in which each station serves as origins (column names: s1, s2, …, s12) and a column of median trip duration when each station serves as origins (column name: sduration); 2) destination usage profile: a data frame organized by station ID (column name: sid), containing multiple columns of monthly total of trips in which each station serves as destinations (column names: e1, e2, …, e12) and a column of median trip duration when each station serves as destinations (column name: eduration); 3) all usage profile: a data frame created by join the two profile data frames described in 1) and 2) by station ID (sid), containing independent columns of origin or destination usage (column names: s1, s2, …, s12, e1, e2, …, e12) and two columns of median trip duration when each station serves as origins or destinations respectively (column names: sduration, eduration).
+For Gaussian mixture model based clustering, we designed three types of usage profiles for each year: 
+
+1) origin usage profile: a data frame organized by station ID (column name: sid), containing multiple columns of monthly total of trips in which each station serves as origins (column names: s1, s2, …, s12) and a column of median trip duration when each station serves as origins (column name: sduration); 
+
+2) destination usage profile: a data frame organized by station ID (column name: sid), containing multiple columns of monthly total of trips in which each station serves as destinations (column names: e1, e2, …, e12) and a column of median trip duration when each station serves as destinations (column name: eduration); 
+
+3) all usage profile: a data frame created by join the two profile data frames described in 1) and 2) by station ID (sid), containing independent columns of origin or destination usage (column names: s1, s2, …, s12, e1, e2, …, e12) and two columns of median trip duration when each station serves as origins or destinations respectively (column names: sduration, eduration).
 
 The three types of usage profiles can be generated from the dataset of trip records from 2015 to 2018. First, we read in the trip records of each year into an independent list where records for each month stored in data frame. Then we use `rbind()` to combine monthly datasets into an annual data frame. The code for this step is attached below. `na.omit()` is used to remove rows with missing records.
 ```{r, eval = FALSE}
@@ -1185,7 +1197,7 @@ In conclusion, from 2015 to 2018, we can find that more and more hot spots appea
 ## Model Based Clustering - MZ
 Figures below are clusters extracted from three types of usage profiles in four years. Comparing across maps in the same year, the number of cluster in origin profile is always less, or at least equal to, that in destination profile, especially in 2015 and 2016, the first two years in our dataset. Less clusters mean less specific characteristics across the usage profile, in other words, the usage patterns of stations as origins are less varied than that of stations as destinations in 2015 and 2016. As the number of stations increasing, the area covered by the station system spreading, the variety of origin usage is increasing, which becomes more similar to that of destination usage.
 
-According to the table in 2.4.4 and the visualization of clusters, the two major clusters in all the usage profiles approximately covers the similar areas in Boston: one is spread from South End to Cambridge with Charles River as a centroid, and the other one seems like a surrounding ring of the first, usually covering north Dorchester, north Roxbury, and Charlestown. The characteristics these cluster would be examined via the statistic distribution of their usage profiles. 
+According to the table in 2.4.4 and the visualization of clusters, the two major clusters in all the usage profiles approximately covers the similar areas in Boston: one spreads from South End to Cambridge with Charles River as a centroid, and the other one seems like a surrounding ring of the first, usually covering north Dorchester, north Roxbury, and Charlestown. The characteristics these cluster would be examined via the statistic distribution of their usage profiles. 
  
 Station usage profile cluster in 2015:
 ![](../vignettes/fig/clusters2015.png){width=98%}
@@ -1201,7 +1213,7 @@ Station usage profile cluster in 2018:
 
 Graphs below are statistic distribution of two major clusters in all-usage profile of 2015. The bar charts show monthly average number of trips by usage type (origin and destination). The histograms shows the trip duration (unit: mins) distributions by usage type. Same graphs are created for 2016, 2017, and 2018, but they are omitted in this vignette for conciseness. If interested, please check figures stored in “../vignette/fig” as reference. Our conclusions are drawn based on all the statistic distribution of major clusters in all-usage profile throughout the four years.
 
-The graphs do not show obvious differences in the distribution by usage type, meaning usage type is not a factor on the usage pattern of the clusters. The average trip distribution of two clusters in the same year are similar in the shape but definitely differ in the range of value. One cluster’s average number of trips usually are as twice as that of the other one, or even more. Correspondingly, the duration distribution of the cluster with higher number of trips is more skewed to the left that the other. To summarize, one cluster has the higher frequency of use and shorter trip duration, while the other one is the opposite. Using the cluster code referring back to the cluster maps above, our finding is that: for every year, the major cluster with higher frequency of use is the one covering downtown Boston and Cambridge, and the other one spread in ring shape surrounding outer neighborhoods in Boston area.
+The graphs do not show obvious differences in the distribution by usage type, meaning usage type is not a factor on the usage pattern of the clusters. The average trip distribution of two clusters in the same year are similar in the shape but definitely differ in the range of value. One cluster’s average number of trips usually are as twice as that of the other one, or even more. Correspondingly, the duration distribution of the cluster with higher number of trips is more skewed to the left that the other. To summarize, one cluster has the higher frequency of use and shorter trip duration, while the other one is the opposite. Using the cluster code referring back to the cluster maps above, our finding is that: for every year, the major cluster with higher frequency of use is the one covering downtown Boston and Cambridge, and the other one spreads in ring shape surrounding outer neighborhoods in Boston area.
 
 Comparing across the four year, the overall trend of average number of trips is decreasing, along with the increasing number of stations. Moreover, graphs in 3.1 indicates that the total number of trips increased from 2015 to 2018. Therefore, the decrease in use frequency may be caused by the increasing number of stations and the more varied usage of the system. There is no significant difference in duration distribution across the period, except the distribution of 2018 is skewed to left because of one outlier trip lasting for around 50 minutes. 
 
@@ -1242,8 +1254,24 @@ kable(DF, align = "r")
 ```
 
 
+# Discussion - MZ
+## Conclusions
+1. From 2015 to 2018, more and more people choose to use Bluebikes, and are willing to spend more time on one trip. People are more likely to use Bluebikes from May to August. Along with the increase of station number, and potential bike number, the variety of station usage increase. Although the total number of trips increases across the four years, the average number of trips by station are decreasing due to the increase of stations and more varied usage profile.
 
+2. From 2015 to 2018, we can find that more and more hot spots appeared, and most of them concentrated at downtown Boston and Cambridge near Charles River. People are more likely to use Bluebikes as a way to colleges and as a way to touring, instead of as a method of transportation to work.
 
-# Discussion
+3. There are two major clusters of Bluebikes stations based on the usage profile. One spreads from South End to Cambridge with Charles River as a centroid, which could be summarized as downtown cluster. And the other one seems like a surrounding ring of the downtown, usually covering neighborhoods like north Dorchester, north Roxbury, and Charlestown. The downtown cluster stations are featured with frequent use and short duration of trips, and the ring cluster stations are featured with less frequent use and relatively longer duration of trips.
 
+4. There is significant positive relationship between temperature and the number of trips. The higher the temperature, the more the people that would like to use Bluebikes. While there is no obvious relationship between precipitation and the number of trips.
+
+5. There are two latent factor affecting the usage profile of stations: distance to colleges and distance to subway routes. Stations closer to colleges and subway routes are more likely to have a usage profile featured with frequent use and short duration of trips.
+
+## Suggestions and Further Steps
+1. The maintain strategies of Bluebikes stations and bikes could vary based on the cluster extracted from the usage profile.
+
+2. New promoting strategies for Bluebikes system might be encouraging more people to use Bluebikes as a work-travel mean from May to August.
+
+3. In the future, we could try to generate as 3-dimentional array of a one-month usage profile at the scale of hourly use per day, in the aim of finding out more detailed station clusters.
+
+4. Bluebikes publishes real-time system data in open General Bikeshare Feed Specification (GBFS) format, which could be used to design a new project analyzing the mobility of bikes based on traffic time and trip route choices.
 
