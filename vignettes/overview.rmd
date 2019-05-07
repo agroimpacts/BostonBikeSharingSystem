@@ -4,7 +4,7 @@ author: "Mengyi Zhang and Piaotian Jin"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Boston Bike Sharing System Analysis}
+  %\VignetteIndexEntry{Overview}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

@@ -12,7 +12,7 @@ output:
     toc: yes
     css: unit.css
 vignette: >
-  %\VignetteIndexEntry{Boston Bike Sharing System Analysis}
+  %\VignetteIndexEntry{Final Paper}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
